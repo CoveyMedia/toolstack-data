@@ -1,10 +1,13 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/array",
+    "dojo/query",
+    "dojo/dom-attr",
     // Required in code
     "citrix/common/Tooltip"
 ],
-function(dojo, declare, tooltip) {
+function(dojo, declare, array, query, attr, tooltip) {
 /*
     When mixed in with a widget that contains nodes, setting "title" attribute on child nodes and
      calling "_bindDijit" will result in a tooltip.
@@ -23,20 +26,20 @@ return declare("citrix.common._CitrixTooltipMixin", null, {
     },
 
     bindTooltips: function() {
-        dojo.forEach(dojo.query("[title]", this.containerNode), function(item) {
-            var id = dojo.attr(item, "id");
-            var title = dojo.attr(item, "title");
-            var preserve = dojo.attr(item, "pre") || false;
+        array.forEach(query("[title]", this.containerNode), function(item) {
+            var id = attr.get(item, "id");
+            var title = attr.get(item, "title");
+            var preserve = attr.get(item, "pre") || false;
             if(this._citrixTooltips[id]) {
                 this._citrixTooltips[id].setTooltip(id);
             } else if (title != "") {
                 if (preserve) {
-                    dojo.attr(item, "title", "<span style='white-space:pre'>" + title + "</span>");
+                    attr.set(item, "title", "<span style='white-space:pre'>" + title + "</span>");
                 }
-                var position = [dojo.attr(item, "position") || "below"];
+                var position = [attr.get(item, "position") || "below"];
                 if (!id && title != "") {
                     id = this.id + "_tooltipNode_" + (this._idCounter++).toString();
-                    dojo.attr(item, "id", id);
+                    attr.set(item, "id", id);
                 }
                 this._citrixTooltips[id] = new tooltip({ connectId: id, position: position, showDelay: 200, baseClass: "citrixTooltip" });
                 if(this._started) {

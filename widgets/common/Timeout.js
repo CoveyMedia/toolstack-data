@@ -1,6 +1,7 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/dom-attr",
     // Resources
     "dojo/text!citrix/common/templates/Timeout.html",
     // Mixins
@@ -8,7 +9,7 @@ define([
     "dijit/_Templated",
     "citrix/common/_CitrixWidgetMixin"
 ],
-function(dojo, declare, template, _widget, _templated, _citrixWidgetMixin) {
+function(dojo, declare, attr, template, _widget, _templated, _citrixWidgetMixin) {
 return declare("citrix.common.Timeout", [_widget, _templated, _citrixWidgetMixin], {
 
     templateString: template,
@@ -25,8 +26,8 @@ return declare("citrix.common.Timeout", [_widget, _templated, _citrixWidgetMixin
     disabled: false,
 
     postCreate: function() {
-        dojo.attr(this.onLabelNode, "for", this.onRadioNode.id);
-        dojo.attr(this.offLabelNode, "for", this.offRadioNode.id);
+        attr.set(this.onLabelNode, "for", this.onRadioNode.id);
+        attr.set(this.offLabelNode, "for", this.offRadioNode.id);
 
         this._setEnabled(this.spinnerNode, this.value > 0);
     },

@@ -1,6 +1,8 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/lang",
+    "dojo/dom-class",
     // Resources
     "dojo/text!citrix/common/templates/TabContainer.html",
     // Mixins
@@ -8,7 +10,7 @@ define([
     // Required in code
     "citrix/common/TabController"
 ],
-function(dojo, declare, template, tabContainer) {
+function(dojo, declare, lang, domClass, template, tabContainer) {
 return declare("citrix.common.TabContainer", [tabContainer], {
 
     templateString: template,
@@ -21,9 +23,9 @@ return declare("citrix.common.TabContainer", [tabContainer], {
 
         this.inherited(arguments);
 
-        this.tablist.watch("focused", dojo.hitch(this, function(prop, oldVal, newVal) {
-            dojo.toggleClass(this.wrapperNode, "dijitFocused", newVal);
-        }));
+        this.own(this.tablist.watch("focused", lang.hitch(this, function(prop, oldVal, newVal) {
+            domClass.toggle(this.wrapperNode, "dijitFocused", newVal);
+        })));
     }
 });
 });

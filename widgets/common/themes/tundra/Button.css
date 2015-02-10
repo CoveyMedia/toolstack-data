@@ -23,6 +23,7 @@
 
 .tundra .citrixButtonText {
     font-size: 13px;
+    line-height: 23px;
 }
 .tundra .imageButton .citrixButtonText {
     font-size: 11px; /* should be a minimum of 12px for ja and sc text */

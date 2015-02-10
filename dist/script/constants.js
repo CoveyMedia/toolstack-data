@@ -442,3 +442,4 @@ XenClient.Resource.PCIClassIDs = [
 ];
 
 XenConstants = XenClient.Resource;
+

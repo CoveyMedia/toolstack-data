@@ -1,6 +1,10 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/lang",
+    "dojo/dom-attr",
+    "dojo/query",
+    "dojo/topic",
     // Resources
     "dojo/i18n!citrix/xenclient/nls/Information",
     "dojo/text!citrix/xenclient/templates/Information.html",
@@ -16,7 +20,7 @@ define([
     "citrix/common/Button",
     "citrix/common/BoundWidget"
 ],
-function(dojo, declare, infoNls, template, dialog, _boundContainerMixin, _citrixTooltipMixin, reportWizard) {
+function(dojo, declare, lang, domAttr, query, topic, infoNls, template, dialog, _boundContainerMixin, _citrixTooltipMixin, reportWizard) {
 return declare("citrix.xenclient.Information", [dialog, _boundContainerMixin, _citrixTooltipMixin], {
 
 	templateString: template,
@@ -27,7 +31,7 @@ return declare("citrix.xenclient.Information", [dialog, _boundContainerMixin, _c
     },
 
     postMixInProperties: function() {
-        dojo.mixin(this, infoNls);
+        lang.mixin(this, infoNls);
         this.inherited(arguments);
     },
 
@@ -35,8 +39,10 @@ return declare("citrix.xenclient.Information", [dialog, _boundContainerMixin, _c
         this.inherited(arguments);
         this.startup();
         this._updateBranding();
-        this.subscribe(XUICache.Host.publish_topic, this._messageHandler);
-        this.subscribe("com.citrix.xenclient.xenmgr", this._messageHandler);
+        this.own(
+            topic.subscribe(XUICache.Host.publish_topic, lang.hitch(this, this._messageHandler)),
+            topic.subscribe("com.citrix.xenclient.xenmgr", lang.hitch(this, this._messageHandler))
+        );
         this._bindDijit();
     },
 
@@ -47,7 +53,7 @@ return declare("citrix.xenclient.Information", [dialog, _boundContainerMixin, _c
     },
 
     refreshResources: function() {
-        this.host.refreshResources(dojo.hitch(this, function() {
+        this.host.refreshResources(lang.hitch(this, function() {
             this.memoryNode.set("value", this.host.free_mem);
             this.storageNode.set("value", this.host.free_storage);
         }));
@@ -65,12 +71,12 @@ return declare("citrix.xenclient.Information", [dialog, _boundContainerMixin, _c
             var basePath = location.href;
             basePath = basePath.substr(0, basePath.lastIndexOf("/"));
             basePath += "/" + blurbPath;
-            dojo.query("[" + attr + "]", document).forEach(function(path, i) {
-                dojo.attr(path, attr, basePath + dojo.attr(path, attr));
+            query("[" + attr + "]", document).forEach(function(path, i) {
+                domAttr.set(path, attr, basePath + domAttr.get(path, attr));
             });
         }
 
-        XUtils.pathExists(blurbPath + XenConstants.Plugins.BRANDING_BLURB, dojo.hitch(this, function(exists, html) {
+        XUtils.pathExists(blurbPath + XenConstants.Plugins.BRANDING_BLURB, lang.hitch(this, function(exists, html) {
             this._setDisplay(".branding", exists);
             if (exists) {
                 html = XUtils.stripScript(html);

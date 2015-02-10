@@ -1,6 +1,10 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/lang",
+    "dojo/dom-class",
+    "dojo/query",
+    "dojo/topic",
     // Resources
     "dojo/i18n!citrix/xenclient/nls/ConnectDevice",
     "dojo/text!citrix/xenclient/templates/ConnectDevice.html",
@@ -15,7 +19,7 @@ define([
     "citrix/common/CheckBox",
     "citrix/common/Button"
 ],
-function(dojo, declare, connectDeviceNls, template, dialog, _boundContainerMixin) {
+function(dojo, declare, lang, domClass, query, topic, connectDeviceNls, template, dialog, _boundContainerMixin) {
 return declare("citrix.xenclient.ConnectDevice", [dialog, _boundContainerMixin], {
 
     templateString: template,
@@ -31,18 +35,20 @@ return declare("citrix.xenclient.ConnectDevice", [dialog, _boundContainerMixin],
     },
 
     postMixInProperties: function() {
-        dojo.mixin(this, connectDeviceNls);
+        lang.mixin(this, connectDeviceNls);
         this.inherited(arguments);
     },
 
     postCreate: function() {
         this.inherited(arguments);
-        this.subscribe(this.vm.publish_topic, this._messageHandler);
+        this.own(
+            topic.subscribe(this.vm.publish_topic, lang.hitch(this, this._messageHandler))
+        );
         this._bindDijit();
     },
 
     onDeviceSelect: function(event) {
-        if (dojo.hasClass(event.currentTarget, "disabled")) {
+        if (domClass.contains(event.currentTarget, "disabled")) {
             return;
         }
         var id = this._getDeviceID(event.currentTarget);
@@ -93,7 +99,9 @@ return declare("citrix.xenclient.ConnectDevice", [dialog, _boundContainerMixin],
     },
 
     _getDeviceID: function(node) {
-        return new dojo.NodeList(node).parents("li").first()[0].getAttribute("deviceId");
+        /* TODO: Test Me */
+        var nodes = query(node).parents("li").first();
+        return nodes[0].getAttribute("deviceId");
     },
 
     _messageHandler: function(message) {

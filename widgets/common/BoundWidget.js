@@ -1,10 +1,13 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/array",
+    "dojo/_base/lang",
+    "dojo/dom-class",
     // Mixins
     "dijit/_Widget"
 ],
-function(dojo, declare, _widget) {
+function(dojo, declare, array, lang, domClass, _widget) {
 return declare("citrix.common.BoundWidget", [_widget], {
 
     name: "",
@@ -32,15 +35,15 @@ return declare("citrix.common.BoundWidget", [_widget], {
 	},
 
     _setMapAttr: function(value) {
-        if (dojo.isArray(value)) {
-            this.map = dojo.map(value, function(item, index) {
+        if (value instanceof Array) {
+            this.map = array.map(value, function(item, index) {
                 if (typeof(item) === "string") {
                     return {value: index, display: item};
                 }
                 return item;
             }, this);
-        } else if (dojo.isObject(value)) {
-            this.map = dojo.map(Object.keys(value), function(item) {
+        } else if (lang.isObject(value)) {
+            this.map = array.map(Object.keys(value), function(item) {
                 return {value: value[item], display: item};
             }, this);
         }
@@ -52,8 +55,8 @@ return declare("citrix.common.BoundWidget", [_widget], {
         var formatMask = this.mask;
 
         if (this.map !== null) {
-            if (dojo.isArray(newValue)) {
-                newValue = dojo.map(newValue, function(value) {
+            if (newValue instanceof Array) {
+                newValue = array.map(newValue, function(value) {
                     for (var item in this.map) {
                         if (this.map.hasOwnProperty(item) && this.map[item].value === value) {
                             return this.map[item].display;
@@ -71,12 +74,12 @@ return declare("citrix.common.BoundWidget", [_widget], {
             }
         }
 
-        if (formatMask == "value" && dojo.isArray(newValue)) {
+        if (formatMask == "value" && newValue instanceof Array) {
             formatMask = newValue.shift();
         }
         if (formatMask != "") {
             newValue = formatMask.format(newValue);
-        } else if (dojo.isArray(newValue)) {
+        } else if (newValue instanceof Array) {
             newValue = newValue.join(", ");
         }
         return newValue;
@@ -94,7 +97,7 @@ return declare("citrix.common.BoundWidget", [_widget], {
                 break;
             }
             case "disabled": {
-                dojo.toggleClass(this.displayNode, "disabled", value);
+                domClass.toggle(this.displayNode, "disabled", value);
                 break;
             }
             default: {

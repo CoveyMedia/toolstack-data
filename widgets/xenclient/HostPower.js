@@ -1,6 +1,9 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/lang",
+    "dojo/_base/array",
+    "dojo/topic",
     // Resources
     "dojo/i18n!citrix/xenclient/nls/HostPower",
     "dojo/text!citrix/xenclient/templates/HostPower.html",
@@ -10,19 +13,21 @@ define([
     // Required in code
     "citrix/xenclient/VMPower"
 ],
-function(dojo, declare, hostPowerNls, template, _vmContainer, dialog, vmPower) {
+function(dojo, declare, lang, array, topic, hostPowerNls, template, _vmContainer, dialog, vmPower) {
 return declare("citrix.xenclient.HostPower", [_vmContainer, dialog], {
 
 	templateString: template,
 
     postMixInProperties: function() {
-        dojo.mixin(this, hostPowerNls);
+        lang.mixin(this, hostPowerNls);
         this.inherited(arguments);
     },
 
     postCreate: function() {
         this.inherited(arguments);
-        this.subscribe(XUICache.Host.publish_topic, this._messageHandler);
+        this.own(
+            topic.subscribe(XUICache.Host.publish_topic, lang.hitch(this, this._messageHandler))
+        );
     },
 
     showDialog: function() {
@@ -37,7 +42,7 @@ return declare("citrix.xenclient.HostPower", [_vmContainer, dialog], {
     _bindDijit: function() {
         // If sleeping, need to determine when to hide dialog
         if (XUICache.Host.state == XenConstants.HostStates.HOST_SLEEPING) {
-            var anyGuestOn = dojo.some(Object.keys(XUICache.VMs), function(key) {
+            var anyGuestOn = array.some(Object.keys(XUICache.VMs), function(key) {
                 var vm = XUICache.VMs[key];
                 return vm.isActive();
             }, this);
@@ -53,7 +58,7 @@ return declare("citrix.xenclient.HostPower", [_vmContainer, dialog], {
     },
 
     _gotVMs: function(items, request) {
-        dojo.forEach(items, function(item, i) {
+        array.forEach(items, function(item, i) {
             var vm_path = this.vmStore.getValue(item, "vm_path");
             if (typeof(this.vms[vm_path]) === "undefined") {
                 this.vms[vm_path] = new vmPower({ path: vm_path });

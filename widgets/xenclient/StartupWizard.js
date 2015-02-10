@@ -1,12 +1,16 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/lang",
+    "dojo/_base/array",
+    "dojo/topic",
     // Resources
     "dojo/i18n!citrix/xenclient/nls/Alerts",
     "dojo/i18n!citrix/xenclient/nls/StartupWizard",
     "dojo/text!citrix/xenclient/templates/StartupWizard.html",
     // Mixins
     "citrix/xenclient/_Wizard",
+    // Requrired by code
     // Required in template
     "citrix/common/WizardContainer",
     "citrix/common/WizardPage",
@@ -15,7 +19,7 @@ define([
     "citrix/common/RadioButton",
     "citrix/common/WizardNavigator"
 ],
-function(dojo, declare, alertsNls, startupWizardNls, template, _wizard) {
+function(dojo, declare, lang, array, topic, alertsNls, startupWizardNls, template, _wizard) {
 return declare("citrix.xenclient.StartupWizard", [_wizard], {
 
     templateString: template,
@@ -24,7 +28,7 @@ return declare("citrix.xenclient.StartupWizard", [_wizard], {
     canCancel: false,
 
     postMixInProperties: function() {
-        dojo.mixin(this, startupWizardNls);
+        lang.mixin(this, startupWizardNls);
 
         this.inherited(arguments);
     },
@@ -32,11 +36,11 @@ return declare("citrix.xenclient.StartupWizard", [_wizard], {
     postCreate: function() {
         this.inherited(arguments);
 
-        this.languagePage.onNextFunction = dojo.hitch(this, this._onLanguagePageNext);
-        this.eulaPage.onStartFunction = dojo.hitch(this, this._onEulaPageStart);
-        this.eulaPage.onNextFunction = dojo.hitch(this, this._onEulaPageNext);
-        this.keyboardPage.onNextFunction = dojo.hitch(this, this._onKeyboardPageNext);
-        this.passwordPage.onStartFunction = dojo.hitch(this, this._onPasswordPageStart);
+        this.languagePage.onNextFunction = lang.hitch(this, this._onLanguagePageNext);
+        this.eulaPage.onStartFunction = lang.hitch(this, this._onEulaPageStart);
+        this.eulaPage.onNextFunction = lang.hitch(this, this._onEulaPageNext);
+        this.keyboardPage.onNextFunction = lang.hitch(this, this._onKeyboardPageNext);
+        this.passwordPage.onStartFunction = lang.hitch(this, this._onPasswordPageStart);
     },
 
     _toolstackError: function(error) {
@@ -53,11 +57,11 @@ return declare("citrix.xenclient.StartupWizard", [_wizard], {
             this.wizard.closeChild(this.languagePage);
         } else {
             if(XUICache.Host.supported_languages.length <= 1) {
-                XUICache.Host.setInstallState("language-set", dojo.hitch(this, function() {
+                XUICache.Host.setInstallState("language-set", lang.hitch(this, function() {
                     this.wizard.closeChild(this.languagePage);
                 }), this._toolstackError);
             } else {
-                var languageMap = dojo.map(XUICache.Host.supported_languages, function(language) {
+                var languageMap = array.map(XUICache.Host.supported_languages, function(language) {
                     var opt = {};
                     opt["value"] = language;
                     opt["label"] = this["LANGUAGE_" + language.substring(3).toUpperCase()];
@@ -73,7 +77,7 @@ return declare("citrix.xenclient.StartupWizard", [_wizard], {
             this._setButtonsForEula(false);
         } else {
             XUICache.Host.getEULA(
-                dojo.hitch(this, function(result) {
+                lang.hitch(this, function(result) {
                     this.eulaContent.innerHTML = result;
                 }),
                 this._toolstackError
@@ -84,7 +88,7 @@ return declare("citrix.xenclient.StartupWizard", [_wizard], {
         } else {
             this.kbRepeater.set(
                 "value",
-                dojo.map(XUICache.Host.keyboard_layouts, dojo.hitch(this, function(item) {
+                array.map(XUICache.Host.keyboard_layouts, lang.hitch(this, function(item) {
                     return {"id": item, "label": this["KEYBOARD_LAYOUT_" + item.toUpperCase().replace(/-/g, "_")]};
                 }))
             );
@@ -128,7 +132,7 @@ return declare("citrix.xenclient.StartupWizard", [_wizard], {
     _onEulaPageNext: function(finish) {
         XUICache.Host.setInstallState(
             "eula-accepted",
-            dojo.hitch(this, function() {
+            lang.hitch(this, function() {
                 this._setButtonsForEula(false);
                 finish();
             }),
@@ -141,7 +145,7 @@ return declare("citrix.xenclient.StartupWizard", [_wizard], {
         XUICache.Host.save(
             "keyboard_layout",
             result.keyboard,
-            dojo.hitch(this, function() {
+            lang.hitch(this, function() {
                 XUICache.Host.setInstallState(
                     "kb-layout-set",
                     finish,
@@ -154,7 +158,7 @@ return declare("citrix.xenclient.StartupWizard", [_wizard], {
 
     _onLanguagePageNext: function(finish) {
         var result = this.unbind();
-        XUICache.Host.setInstallState("language-set", dojo.hitch(this, function() {
+        XUICache.Host.setInstallState("language-set", lang.hitch(this, function() {
             if(XUICache.Host.language != result.language) {
                 XUICache.Host.save("language", result.language, finish, this._toolstackError);
             } else {
@@ -166,16 +170,18 @@ return declare("citrix.xenclient.StartupWizard", [_wizard], {
     _onPasswordPageStart: function() {
         var flags = XenConstants.AuthFlags.SET_ROOT_PW | XenConstants.AuthFlags.CONFIRM_PW | XenConstants.AuthFlags.CANNOT_CANCEL;
         XUICache.Host.authSetContextFlags("", "", flags,
-            dojo.hitch(this, function() {
+            lang.hitch(this, function() {
                 XUtils.publish(XenConstants.TopicTypes.UI_SHOW_POPUP, [this.SET_SYSTEM_PASSWORD + "<br/>" + alertsNls.AUTH_START, alertsNls.AUTH_START_HEADING]);
                 // login returns straight away
-                this.subscribe("com.citrix.xenclient.input", dojo.hitch(this, function(obj) {
-                    switch(obj.type) {
-                        case "auth_status":
-                            this.onExecute();
-                            break;
-                    }
-                }));
+                this.own(
+                    topic.subscribe("com.citrix.xenclient.input", lang.hitch(this, function(obj) {
+                        switch(obj.type) {
+                            case "auth_status":
+                                this.onExecute();
+                                 break;
+                        }
+                    }))
+               );
             }),
             this._toolstackError
         );

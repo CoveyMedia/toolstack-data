@@ -1,6 +1,8 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/lang",
+    "dojo/topic",
     // Resources
     "dojo/i18n!citrix/xenclient/nls/Frame",
     "dojo/text!citrix/xenclient/templates/Footer.html",
@@ -15,23 +17,25 @@ define([
     "citrix/common/FooterBarItem",
     "citrix/xenclient/AlertFooterBarItem"
 ],
-function(dojo, declare, frameNls, template, _layoutWidget, _templated, _citrixWidget, battery) {
+function(dojo, declare, lang, topic, frameNls, template, _layoutWidget, _templated, _citrixWidget, battery) {
 return declare("citrix.xenclient.Footer", [_layoutWidget, _templated, _citrixWidget], {
 
 	templateString: template,
     widgetsInTemplate: true,
 
     postMixInProperties: function() {
-        dojo.mixin(this, frameNls);
+        lang.mixin(this, frameNls);
         this.inherited(arguments);
     },
 
     postCreate: function() {
         this.inherited(arguments);
-        this.subscribe(XUtils.publishTopic, this._messageHandler);
-        this.subscribe(XUICache.Host.publish_topic, this._messageHandler);
+        this.own(
+            topic.subscribe(XUtils.publishTopic, lang.hitch(this, this._messageHandler)),
+            topic.subscribe(XUICache.Host.publish_topic, lang.hitch(this, this._messageHandler))
+        );
         var path = XenConstants.Plugins.PLUGIN_PATH + XenConstants.Plugins.BRANDING_DIR + "/" + XenConstants.Plugins.BRANDING_LOGO;
-        XUtils.pathExists(path, dojo.hitch(this, function(exists) {
+        XUtils.pathExists(path, lang.hitch(this, function(exists) {
             if (exists) {
                 this.brandingLogo.src = path;
                 this._setDisplay(this.brandingLogo, true);

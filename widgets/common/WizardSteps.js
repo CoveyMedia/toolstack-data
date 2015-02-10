@@ -1,6 +1,10 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/lang",
+    "dojo/_base/array",
+    "dojo/topic",
+    "dojo/dom-construct", 
     // Resources
     "dojo/text!citrix/common/templates/WizardSteps.html",
     // Mixins
@@ -10,7 +14,7 @@ define([
     // Required in code
     "citrix/common/WizardStepItem"
 ],
-function(dojo, declare, template, _widget, _templated, _container, wizardStepItem) {
+function(dojo, declare, lang, array, topic, construct, template, _widget, _templated, _container, wizardStepItem) {
 return declare("citrix.common.WizardSteps", [_widget, _templated, _container], {
 
     templateString: template,
@@ -30,14 +34,14 @@ return declare("citrix.common.WizardSteps", [_widget, _templated, _container], {
         this.inherited(arguments);
 
         // Listen to notifications from StackContainer
-        this.subscribe(this.containerId + "-startup", "onStartup");
-        this.subscribe(this.containerId + "-selectChild", "onSelectChild");
-        this.subscribe(this.containerId + "-removeChild", "onRemoveChild");
-        this.subscribe(this.containerId + "-addChild", "onAddChild");
+        this.own(topic.subscribe(this.containerId + "-startup", lang.hitch(this, "onStartup")));
+        this.own(topic.subscribe(this.containerId + "-selectChild", lang.hitch(this, "onSelectChild")));
+        this.own(topic.subscribe(this.containerId + "-removeChild", lang.hitch(this, "onRemoveChild")));
+        this.own(topic.subscribe(this.containerId + "-addChild", lang.hitch(this, "onAddChild")));
     },
 
     onStartup: function(/*Object*/ info){
-        dojo.forEach(info.children, this.onAddChild, this);
+        array.forEach(info.children, this.onAddChild, this);
         if(info.selected){
             // Show button corresponding to selected pane (unless selected
             // is null because there are no panes)
@@ -61,7 +65,7 @@ return declare("citrix.common.WizardSteps", [_widget, _templated, _container], {
         });
 
         this.addChild(element, insertIndex);
-        dojo.place(marker.domNode, this.markerNode, insertIndex);
+        construct.place(marker.domNode, this.markerNode, insertIndex);
         this.pane2steps[page.id] = element;
         this.pane2markers[page.id] = marker;
 

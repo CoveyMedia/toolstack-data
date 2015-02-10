@@ -1,6 +1,10 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/lang",
+    "dojo/_base/array",
+    "dojo/Deferred",
+    "dojo/topic",
     // Resources
     "dojo/i18n!citrix/xenclient/nls/MediaWizard",
     "dojo/text!citrix/xenclient/templates/MediaWizard.html",
@@ -19,7 +23,7 @@ define([
     "citrix/common/WizardNavigator",
     "citrix/common/ProgressBar"
 ],
-function(dojo, declare, mediaWizardNls, template, _wizard) {
+function(dojo, declare, lang, array, Deferred, topic, mediaWizardNls, template, _wizard) {
 return declare("citrix.xenclient.MediaWizard", [_wizard], {
 
     templateString: template,
@@ -34,20 +38,22 @@ return declare("citrix.xenclient.MediaWizard", [_wizard], {
     },
 
     postMixInProperties: function() {
-        dojo.mixin(this, mediaWizardNls);
+        lang.mixin(this, mediaWizardNls);
         this.inherited(arguments);
     },
 
     postCreate: function() {
         this.inherited(arguments);
 
-        this.subscribe(this.host.publish_topic, this._messageHandler);
-        this.subscribe("com.citrix.xenclient.networkdaemon", this._messageHandler);
+        this.own(
+            topic.subscribe(this.host.publish_topic, lang.hitch(this, this._messageHandler)),
+            topic.subscribe("com.citrix.xenclient.networkdaemon", lang.hitch(this, this._messageHandler))
+        );
         this._bindDijit();
         this._setupBoot();
 
         // set up finish page function (to run before onExecute)
-        this.finishPage.onNextFunction = dojo.hitch(this, this._onFinishPageNext);
+        this.finishPage.onNextFunction = lang.hitch(this, this._onFinishPageNext);
     },
 
     startup: function() {
@@ -69,11 +75,11 @@ return declare("citrix.xenclient.MediaWizard", [_wizard], {
 
         var result = this.unbind();
         var args = arguments;
-        var callback = dojo.hitch(this, function(value) {
+        var callback = lang.hitch(this, function(value) {
             finish();
             return value;
         });
-        var errback = dojo.hitch(this, function(error) {
+        var errback = lang.hitch(this, function(error) {
             XUICache.messageBox.showError(this.VM_ERRORS);
             callback();
             return error;
@@ -81,7 +87,7 @@ return declare("citrix.xenclient.MediaWizard", [_wizard], {
 
         var self = this;
         var createVM = function() {
-            var deferred = new dojo.Deferred();
+            var deferred = new Deferred();
             XUICache.createVM(result.template, result.name, result.description, result.imagePath, result.storage * 1000, result.encrypt, mediaWizardNls.ENCRYPT_MESSAGE, function(vm) {
                 // Initial properties for created VM
                 vm.vcpus = result.vcpus;
@@ -90,7 +96,7 @@ return declare("citrix.xenclient.MediaWizard", [_wizard], {
                 vm.boot = (result.autoStart == "network") ? "cn" : "cd";
 
                 var save = function() {
-                    var saveDeferred = new dojo.Deferred();
+                    var saveDeferred = new Deferred();
                     vm.save(function() {
                         // Set wired network
                         if(self._hasWired && result.wiredNetwork != "") {
@@ -110,12 +116,12 @@ return declare("citrix.xenclient.MediaWizard", [_wizard], {
                         if (result.autoStart != "off") {
                             vm.start();
                         }
-                        saveDeferred.callback(true);
-                    }, saveDeferred.errback);
+                        saveDeferred.resolve(true);
+                    }, saveDeferred.reject);
                     return saveDeferred;
                 };
-                save().then(deferred.callback, deferred.errback);
-            }, deferred.errback);
+                save().then(deferred.resolve, deferred.reject);
+            }, deferred.reject);
             return deferred;
         };
 
@@ -127,7 +133,7 @@ return declare("citrix.xenclient.MediaWizard", [_wizard], {
         this.free_mem.set("value", this.host.free_mem);
 
         // VM templates
-        var templateMap = dojo.map(this.host.getVMTemplates(), function(key) {
+        var templateMap = array.map(this.host.getVMTemplates(), function(key) {
             return {"label": key.description, "value": key.template};
         }, this);
 
@@ -146,11 +152,11 @@ return declare("citrix.xenclient.MediaWizard", [_wizard], {
         var defaultWired = "";
         var defaultWireless = "";
 
-        dojo.forEach(networks, function(network) {
+        array.forEach(networks, function(network) {
             typeHasMany[network.type] = (typeof typeHasMany[network.type] !== "undefined");
         });
 
-        dojo.forEach(networks, function(network) {
+        array.forEach(networks, function(network) {
             if (network.wireless) {
                 this._hasWireless = true;
                 var list = wirelessSelectList;
@@ -206,7 +212,7 @@ return declare("citrix.xenclient.MediaWizard", [_wizard], {
         // ISOs
         var selectedIso = "";
         var assignableISOs = (XUICache.Host.available_isos.length > 1);
-        var isoMap = dojo.map(this.host.available_isos, function(iso) {
+        var isoMap = array.map(this.host.available_isos, function(iso) {
             var toolsIso = (iso == XenConstants.Defaults.TOOLS_ISO);
             if (selectedIso == "" && !toolsIso) {
                 // Select first ISO which isn't the tools
@@ -223,7 +229,7 @@ return declare("citrix.xenclient.MediaWizard", [_wizard], {
         // CDs
         var availableCD = (XUICache.Host.available_cds.length > 0);
         var assignableCD = false;
-        dojo.some(this.host.available_cds, function(cd) {
+        array.some(this.host.available_cds, function(cd) {
             if (cd.vm == "" && cd["vm-sticky"] == "0") {
                 assignableCD = true;
                 return true;
@@ -245,7 +251,7 @@ return declare("citrix.xenclient.MediaWizard", [_wizard], {
     _onBootChange: function() {
         var bootValue;
 
-        dojo.some(["autoStart_iso", "autoStart_cd", "autoStart_network", "autoStart_off"], function(radio) {
+        array.some(["autoStart_iso", "autoStart_cd", "autoStart_network", "autoStart_off"], function(radio) {
             if (this[radio].checked) {
                 bootValue = this[radio].value;
                 return true;

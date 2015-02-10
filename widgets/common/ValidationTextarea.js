@@ -1,10 +1,15 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/lang",
+    "dojo/has", 
+    "dojo/sniff",
+    "dojo/dom-class",
+    "dijit/form/TextBox", 
     // Mixins
     "citrix/common/ValidationTextBox"
 ],
-function(dojo, declare, validationTextBox) {
+function(dojo, declare, lang, has, sniff, domClass, TextBox, validationTextBox) {
 return declare("citrix.common.ValidationTextarea", [validationTextBox], {
 // We don't want to inherit from SimpleTextarea as it hides the maxLength attribute which works in Webkit
 // and has an _onInput function which fails for double-byte characters
@@ -20,7 +25,7 @@ return declare("citrix.common.ValidationTextarea", [validationTextBox], {
     //		The number of characters per line.
     cols: "20",
 
-    attributeMap: dojo.delegate(dijit.form.TextBox.prototype.attributeMap, {
+    attributeMap: lang.delegate(TextBox.prototype.attributeMap, {
         rows: "textbox", cols: "textbox"
     }),
 
@@ -37,8 +42,8 @@ return declare("citrix.common.ValidationTextarea", [validationTextBox], {
 
     buildRendering: function(){
         this.inherited(arguments);
-        if(dojo.isIE && this.cols){ // attribute selectors is not supported in IE6
-            dojo.addClass(this.textbox, "dijitTextAreaCols");
+        if(has("ie") && this.cols){ // attribute selectors is not supported in IE6
+            domClass.add(this.textbox, "dijitTextAreaCols");
         }
     },
 

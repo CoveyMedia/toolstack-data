@@ -1,12 +1,14 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/lang",
+    "dojo/topic",
     // Resources
     "dojo/i18n!citrix/xenclient/nls/Alerts",
     // Mixins
     "citrix/common/FooterBarItem"
 ],
-function(dojo, declare, alertsNls, footerBarItem) {
+function(dojo, declare, lang, topic, alertsNls, footerBarItem) {
 return declare("citrix.xenclient.AlertFooterBarItem", [footerBarItem], {
 
     messages: {},
@@ -16,18 +18,20 @@ return declare("citrix.xenclient.AlertFooterBarItem", [footerBarItem], {
     _iconClass: "alertIcon alertIconSmall citrixMenuBarAlert alertIcon",
 
     postMixInProperties: function() {
-        dojo.mixin(this, alertsNls);
+        lang.mixin(this, alertsNls);
         this.inherited(arguments);
     },
 
     postCreate: function() {
         this.inherited(arguments);
         this._setDisplay(this.focusNode, false);
-        this.subscribe(XUtils.publishTopic, this._messageHandler);
-        this.subscribe(XUICache.Update.publish_topic, this._messageHandler);
-        this.subscribe("com.citrix.xenclient.xenmgr.host", this._messageHandler);
-        this.subscribe("com.citrix.xenclient.xenmgr.guestreq", this._messageHandler);
-        this.subscribe("com.citrix.xenclient.bed.notify.vm", this._messageHandler);
+        this.own(
+            topic.subscribe(XUtils.publishTopic, lang.hitch(this, this._messageHandler)),
+            topic.subscribe(XUICache.Update.publish_topic, lang.hitch(this, this._messageHandler)),
+            topic.subscribe("com.citrix.xenclient.xenmgr.host", lang.hitch(this, this._messageHandler)),
+            topic.subscribe("com.citrix.xenclient.xenmgr.guestreq", lang.hitch(this, this._messageHandler)),
+            topic.subscribe("com.citrix.xenclient.bed.notify.vm", lang.hitch(this, this._messageHandler))
+        );
     },
 
     showKnownMessage: function(type, args, timeout, severity, id) {
@@ -51,7 +55,7 @@ return declare("citrix.xenclient.AlertFooterBarItem", [footerBarItem], {
             }
         }
 
-        var handle = setTimeout(dojo.hitch(this, function() {
+        var handle = setTimeout(lang.hitch(this, function() {
             if (this.messages[id].handle != null) {
                 clearTimeout(this.messages[id].handle);
             }

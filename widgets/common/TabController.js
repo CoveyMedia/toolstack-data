@@ -1,12 +1,13 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/array",
     // Mixins
     "dijit/layout/TabController",
     // Required in code
     "citrix/common/TabButton"
 ],
-function(dojo, declare, tabController, tabButton) {
+function(dojo, declare, array, tabController, tabButton) {
 return declare("citrix.common.TabController", [tabController], {
 
     buttonWidget: tabButton,
@@ -15,7 +16,7 @@ return declare("citrix.common.TabController", [tabController], {
         if(!this.isLeftToRight() && (!this.tabPosition || /top|bottom/.test(this.tabPosition))){ forward = !forward; }
         // find currently focused button in children array
         var children = this.getChildren();
-        var current = dojo.indexOf(children, this.pane2button[this._currentChild.id]);
+        var current = array.indexOf(children, this.pane2button[this._currentChild.id]);
         // pick next button to focus on
         var nextChild;
         for (var i = 0; i < children.length; i++) {

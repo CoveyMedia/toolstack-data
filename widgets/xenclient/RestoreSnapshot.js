@@ -1,6 +1,9 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/lang",
+    "dojo/query",
+    "dojo/topic",
     // Resources
     "dojo/i18n!citrix/xenclient/nls/RestoreSnapshot",
     "dojo/text!citrix/xenclient/templates/RestoreSnapshot.html",
@@ -14,7 +17,7 @@ define([
     "citrix/common/BoundWidget",
     "citrix/common/Button"
 ],
-function(dojo, declare, restoreSnapshotNls, template, dialog, _boundContainerMixin) {
+function(dojo, declare, lang, query, topic, restoreSnapshotNls, template, dialog, _boundContainerMixin) {
 return declare("citrix.xenclient.RestoreSnapshot", [dialog, _boundContainerMixin], {
 
     templateString: template,
@@ -29,13 +32,15 @@ return declare("citrix.xenclient.RestoreSnapshot", [dialog, _boundContainerMixin
     },
 
     postMixInProperties: function() {
-        dojo.mixin(this, restoreSnapshotNls);
+        lang.mixin(this, restoreSnapshotNls);
         this.inherited(arguments);
     },
 
     postCreate: function() {
         this.inherited(arguments);
-        this.subscribe(this.vm.publish_topic, this._messageHandler);
+        this.own(
+            topic.subscribe(this.vm.publish_topic, lang.hitch(this, this._messageHandler))
+        );
         this._bindDijit();
     },
 
@@ -70,7 +75,7 @@ return declare("citrix.xenclient.RestoreSnapshot", [dialog, _boundContainerMixin
     },
 
     _getDeviceID: function(node) {
-        return new dojo.NodeList(node).parents("li").first()[0].getAttribute("deviceId");
+        return query(node).parents("li").first()[0].getAttribute("deviceId");
     },
 
     _messageHandler: function(message) {

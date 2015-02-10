@@ -1,6 +1,8 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/lang",
+    "dojo/topic",
     // Resources
     "dojo/i18n!citrix/xenclient/nls/Alerts",
     "dojo/text!citrix/xenclient/templates/NotificationBar.html",
@@ -10,19 +12,21 @@ define([
     "dijit/_Templated",
     "citrix/common/_CitrixWidgetMixin"
 ],
-function(dojo, declare, alertsNls, template, _widget, _contained, _templated, _citrixWidgetMixin) {
+function(dojo, declare, lang, topic, alertsNls, template, _widget, _contained, _templated, _citrixWidgetMixin) {
 return declare("citrix.xenclient.NotificationBar", [_widget, _contained, _templated, _citrixWidgetMixin], {
 
 	templateString: template,
 
     postMixInProperties: function() {
-        dojo.mixin(this, alertsNls);
+        lang.mixin(this, alertsNls);
         this.inherited(arguments);
     },
 
     postCreate: function() {
         this.inherited(arguments);
-        this.subscribe(XUICache.Host.publish_topic, this._messageHandler);
+        this.own(
+            topic.subscribe(XUICache.Host.publish_topic, lang.hitch(this, this._messageHandler))
+        );
         this._bindDijit();
     },
 

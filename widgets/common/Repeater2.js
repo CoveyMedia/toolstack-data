@@ -11,12 +11,12 @@ define([
     "dijit",
     // Mixins
     "dijit/_Widget",
-    "citrix/common/_BoundContainerMixin",
+    "citrix/common/_BoundContainerMixin2",
     "citrix/common/_EditableMixin",
     "citrix/common/_CitrixWidgetMixin"
 ],
 function(dojo, declare, array, lang, attr, query, on, construct, parser, dijit, _widget, _boundContainerMixin, _editableMixin, _citrixWidgetMixin) {
-return declare("citrix.common.Repeater", [_widget, _boundContainerMixin, _editableMixin, _citrixWidgetMixin], {
+return declare("citrix.common.Repeater2", [_widget, _boundContainerMixin, _editableMixin, _citrixWidgetMixin], {
 
     dojoEventHandler: "", // this is often a reference to the parent widget, set in the markup
     name: "",
@@ -31,7 +31,15 @@ return declare("citrix.common.Repeater", [_widget, _boundContainerMixin, _editab
     _connectHandles: [],
     _proxyEvents: ["_handleOnChange", "onKeyUp"],
 
-    constructor: function() {
+    constructor: function(args) {
+        // set values with constructor
+        args = args || {};
+        for( var i in args){
+            if (typeof this[i] !== "undefined"){
+                this[i] = args[i];
+            }
+        }
+
         this._connectHandles = [];
         function proxyEvent(/*Event*/ event){}
         array.forEach(this._proxyEvents, function(event) {
@@ -78,6 +86,7 @@ return declare("citrix.common.Repeater", [_widget, _boundContainerMixin, _editab
         this._bindDijit();
 	},
 
+    
     _getNodes: function() {
         var templateNode = query('[' + this.templateAttr + ']', this.srcNodeRef)[0] || null;
         var emptyNode = query('[' + this.emptyAttr + ']', this.srcNodeRef)[0] || null;
@@ -109,12 +118,13 @@ return declare("citrix.common.Repeater", [_widget, _boundContainerMixin, _editab
         array.forEach(this._connectHandles, function(handle) {
             handle.remove();
         });
+        this._childWidgets = [];
         this.containerNode.innerHTML = "";
         this.optionWidgets = {};
     },
 
     _addItems: function() {
-        if ((this.templateHtml || this.emptyHtml) && this.containerNode && this.value) {
+        if ((this.templateHtml || this.emptyHtml) && this.containerNode && this.value  ){
             if (this.value.length == 0) {
                 this._addItem(this.emptyHtml);
                 return;
@@ -151,12 +161,18 @@ return declare("citrix.common.Repeater", [_widget, _boundContainerMixin, _editab
             html = lang.replace(html, item, /%([^%]+)%/g);
         }
         var node = construct.toDom(html);
-        var widgets = parser.parse(node, {
-            scope: "template"
-        });
-
-        this._attachTemplateNodes(widgets);
-        this._setupOptions(widgets);
+        if(item){
+            var widgets = parser.parse(node, {
+                scope: "template"
+            });
+            var _widgets = [];
+            for (var p = 0; p < widgets.length; p++){
+                this.addChildWidget(widgets[p]);
+            }
+            
+            this._attachTemplateNodes(widgets);
+            this._setupOptions(widgets);
+        }
         this.bind(item, node, true, this.bindAttr);
         this.containerNode.appendChild(node);
     },
@@ -223,7 +239,7 @@ return declare("citrix.common.Repeater", [_widget, _boundContainerMixin, _editab
                             if(!thisFunc){
                                 thisFunc = event;
                             }
-                            this._connectHandles.push(on(baseNode, event, lang.hitch(this, this.dojoEventHandler), thisFunc));
+                            this._connectHandles.push(on(baseNode, event, lang.hitch(this.dojoEventHandler, thisFunc)));
                             //this._connectHandles.push(dojo.connect(baseNode, event, this.dojoEventHandler, thisFunc));
                         }
                     }

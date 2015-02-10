@@ -1,6 +1,7 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/array",
     // Resources
     "dojo/text!citrix/xenclient/templates/VMContainer.html",
     // Mixins
@@ -10,13 +11,13 @@ define([
     "citrix/xenclient/VM",
     "citrix/xenclient/VMFish"
 ],
-function(dojo, declare, template, _vmContainer, _templated, vm, vmFish) {
+function(dojo, declare, array, template, _vmContainer, _templated, vm, vmFish) {
 return declare("citrix.xenclient.VMContainer", [_vmContainer, _templated], {
 
 	templateString: template,
 
     _gotVMs: function(items, request) {
-        dojo.forEach(items, function(item, i) {
+        array.forEach(items, function(item, i) {
             var vm_path = this.vmStore.getValue(item, "vm_path");
             if (typeof(this.vms[vm_path]) === "undefined") {
                 if (XenConstants.Defaults.FISH) {

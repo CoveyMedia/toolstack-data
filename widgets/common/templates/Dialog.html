@@ -1,10 +1,10 @@
 <div class="citrixDialog" tabindex="-1" waiRole="dialog" waiState="labelledby-${id}_title">
 	<div class="citrixDialogTitleBar">
-        <span dojoAttachPoint="titleNode" class="citrixDialogTitle" id="${id}_title"></span>
-        <span dojoAttachPoint="closeButtonNode" class="citrixDialogCloseIcon" dojoAttachEvent="onclick: onCancel">
-            <span dojoAttachPoint="closeText"></span>
+        <span data-dojo-attach-point="titleNode" class="citrixDialogTitle" id="${id}_title"></span>
+        <span data-dojo-attach-point="closeButtonNode" class="citrixDialogCloseIcon" data-dojo-attach-event="onclick: onCancel">
+            <span data-dojo-attach-point="closeText"></span>
         </span>
 	</div>
-    <div dojoAttachPoint="containerNode" class="citrixDialogPaneContent"></div>
-    <div dojoAttachPoint="footerNode" class="citrixDialogFooterContent"></div>
+    <div data-dojo-attach-point="containerNode" class="citrixDialogPaneContent"></div>
+    <div data-dojo-attach-point="footerNode" class="citrixDialogFooterContent"></div>
 </div>

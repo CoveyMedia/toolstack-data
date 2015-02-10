@@ -1,6 +1,7 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/array",
     // Resources
     "dojo/text!citrix/common/templates/OrderableList.html",
     // Mixins
@@ -9,7 +10,7 @@ define([
     // Required in code
     "citrix/common/OrderableHorizItem"
 ],
-function(dojo, declare, template, _layoutWidget, _templated, orderableHorizItem) {
+function(dojo, declare, array, template, _layoutWidget, _templated, orderableHorizItem) {
 return declare("citrix.common.OrderableList", [_layoutWidget, _templated], {
 
     templateString: template,
@@ -23,7 +24,7 @@ return declare("citrix.common.OrderableList", [_layoutWidget, _templated], {
 
     childMoved: function(){
         var newData = [];
-        dojo.forEach(this.getChildren(), function(item, i){
+        array.forEach(this.getChildren(), function(item, i){
             newData[i] = {"uid": item.uid, "info": item.info, "position": i};
         });
         this.value = newData;
@@ -49,7 +50,7 @@ return declare("citrix.common.OrderableList", [_layoutWidget, _templated], {
     },
 
     _removeChildren: function(){
-        dojo.forEach(this.getChildren(), function(item){
+        array.forEach(this.getChildren(), function(item){
             this.removeChild(item);
             item.destroyRecursive();
         }, this);
@@ -61,7 +62,7 @@ return declare("citrix.common.OrderableList", [_layoutWidget, _templated], {
             children.sort(function(a,b){
                 return a.position - b.position;
             });
-            dojo.forEach(children, function(item, i){
+            array.forEach(children, function(item, i){
                 var listItem = new orderableHorizItem({uid: item.uid, info: item.info});
                 this.addChild(listItem);
             }, this);
@@ -87,7 +88,7 @@ return declare("citrix.common.OrderableList", [_layoutWidget, _templated], {
 
     _valueToSensibleString: function(value) {
         var returnString = "";
-        dojo.forEach(value, function(item, i) {
+        array.forEach(value, function(item, i) {
             if(returnString !== "") {
                 returnString += ", ";
             }

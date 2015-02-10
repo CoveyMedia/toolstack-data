@@ -1,6 +1,12 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/array",
+    "dojo/_base/lang",
+    "dojo/_base/window",
+    "dojo/query",
+    "dojo/on",
+    "dojo/topic",
     // Resources
     "dojo/i18n!citrix/xenclient/nls/VMDetails",
     "dojo/i18n!citrix/xenclient/nls/VM",
@@ -37,7 +43,7 @@ define([
     "citrix/common/ProgressBar",
     "citrix/common/CheckBox"
 ],
-function(dojo, declare, vmDetailsNls, vmNls, template, dialog, _boundContainerMixin, _editableMixin, _citrixTooltipMixin, addNic, addDisk, connectDevice, connectPCI, restoreSnapshot, itemFileReadStore, editableWidget, label, boundWidget, domConstruct) {
+function(dojo, declare, array, lang, window, query, on, topic, vmDetailsNls, vmNls, template, dialog, _boundContainerMixin, _editableMixin, _citrixTooltipMixin, addNic, addDisk, connectDevice, connectPCI, restoreSnapshot, itemFileReadStore, editableWidget, label, boundWidget, domConstruct) {
 return declare("citrix.xenclient.VMDetails", [dialog, _boundContainerMixin, _editableMixin, _citrixTooltipMixin], {
 
 	templateString: template,
@@ -53,18 +59,20 @@ return declare("citrix.xenclient.VMDetails", [dialog, _boundContainerMixin, _edi
     },
 
     postMixInProperties: function() {
-        dojo.mixin(this, vmDetailsNls);
-        dojo.mixin(this, XenConstants);
+        lang.mixin(this, vmDetailsNls);
+        lang.mixin(this, XenConstants);
         this.inherited(arguments);
     },
 
     postCreate: function() {
         this.inherited(arguments);
         this.startup();
-        this.subscribe(XUtils.publishTopic, this._messageHandler);
-        this.subscribe(this.vm.publish_topic, this._messageHandler);
-        this.subscribe(XUICache.Host.publish_topic, this._messageHandler);
-        this.subscribe("com.citrix.xenclient.xenmgr", this._messageHandler);
+        this.own(
+            topic.subscribe(XUtils.publishTopic, lang.hitch(this, this._messageHandler)),
+            topic.subscribe(this.vm.publish_topic, lang.hitch(this, this._messageHandler)),
+            topic.subscribe(XUICache.Host.publish_topic, lang.hitch(this, this._messageHandler)),
+            topic.subscribe("com.citrix.xenclient.xenmgr", lang.hitch(this, this._messageHandler))
+        );
         this._createCustomFields();
         this._bindDijit();
         if (this.vm.policy_modify_vm) {
@@ -75,7 +83,9 @@ return declare("citrix.xenclient.VMDetails", [dialog, _boundContainerMixin, _edi
         } else {
             this.image_path.set("source", this.host.available_vmimages);
         }
-        this.connect(dojo.doc, "onblur", this._onBlur);
+        this.own(
+            on(window.doc, "onblur", lang.hitch(this, this._onBlur))
+        );
     },
 
     edit: function() {
@@ -94,7 +104,7 @@ return declare("citrix.xenclient.VMDetails", [dialog, _boundContainerMixin, _edi
         if (values.policy_audio_access === false) {
             values.policy_audio_recording = false;
         }
-        this.saveValues(this.vm, values, dojo.hitch(this, function() {
+        this.saveValues(this.vm, values, lang.hitch(this, function() {
             if (typeof(values.gpu) !== "undefined" && values.gpu) {
                 XUICache.messageBox.showWarning(this.THREED_ENABLED);
             }
@@ -122,7 +132,7 @@ return declare("citrix.xenclient.VMDetails", [dialog, _boundContainerMixin, _edi
 	},
 
     refreshResources: function() {
-        this.host.refreshResources(dojo.hitch(this, function() {
+        this.host.refreshResources(lang.hitch(this, function() {
             this.systemMemoryNode.set("value", [this.host.total_mem, this.host.free_mem]);
         }));
     },
@@ -131,7 +141,7 @@ return declare("citrix.xenclient.VMDetails", [dialog, _boundContainerMixin, _edi
         if(this.vm.get_virtualDisks().length > 0) {
             this._vmAction(action);
         } else {
-            XUICache.messageBox.showConfirmation(this.START_VM_NO_DISKS.format(this.vm.name), dojo.hitch(this, function() {
+            XUICache.messageBox.showConfirmation(this.START_VM_NO_DISKS.format(this.vm.name), lang.hitch(this, function() {
                 this._vmAction(action);
             }), {
                 headerText: this.START_VM_NO_DISKS_HEADER,
@@ -234,7 +244,7 @@ return declare("citrix.xenclient.VMDetails", [dialog, _boundContainerMixin, _edi
             });
         };
         if ([4, 5].contains(usb.state)) {
-            XUICache.messageBox.showConfirmation(this.USB_UNASSIGN, dojo.hitch(this, disconnect));
+            XUICache.messageBox.showConfirmation(this.USB_UNASSIGN, lang.hitch(this, disconnect));
         } else if (usb.state == 6) {
             // Device in use and VM is NOT running
             disconnect.call(this);
@@ -329,7 +339,7 @@ return declare("citrix.xenclient.VMDetails", [dialog, _boundContainerMixin, _edi
                 XUICache.messageBox.showError(error, XenConstants.ToolstackCodes);
             });
         };
-        XUICache.messageBox.showConfirmation(this.PCI_UNASSIGN, dojo.hitch(this, remove));
+        XUICache.messageBox.showConfirmation(this.PCI_UNASSIGN, lang.hitch(this, remove));
     },
 
     onHardwareTabShow: function() {
@@ -345,20 +355,20 @@ return declare("citrix.xenclient.VMDetails", [dialog, _boundContainerMixin, _edi
     },
 
     _descendantAction: function(action) {
-        dojo.forEach(this.getDescendants(), dojo.hitch(this, function(widget){
+        array.forEach(this.getDescendants(), function(widget){
             if(widget[action] && typeof(widget[action]) == "function") {
                 if(widget.name != "connectedDevices" || this.vm.canAddDevice()){
                     widget[action]();
                 }
             }
-        }));
+        });
     },
 
     _bindDijit: function() {
         // Comments depict memory leftover after VM download when dialog open (O) and closed (C)
         this.bind(this.vm); // O: 1.4, C: 1.9
         this._binding = true;
-        this.set("title", dojo.replace("{0} ({1})", [this.vm.truncatedName(45), this.vm.getTranslatedState(vmNls)]));
+        this.set("title", lang.replace("{0} ({1})", [this.vm.truncatedName(45), this.vm.getTranslatedState(vmNls)]));
         this._updateActions();
         this._updateMoreActions();
         this._updateButtons(); // O: 0.1, C: 0.4
@@ -386,7 +396,7 @@ return declare("citrix.xenclient.VMDetails", [dialog, _boundContainerMixin, _edi
                 }
             }
         }
-        dojo.forEach(actions, function(action) {
+        array.forEach(actions, function(action) {
             this._setDisplay(this[action + "Action"], allowedActions.contains(action));
             this._setEnabled(this[action + "Action"], !this.vm.powerClicked);
         }, this);
@@ -435,7 +445,7 @@ return declare("citrix.xenclient.VMDetails", [dialog, _boundContainerMixin, _edi
     _updateMaps: function() {
         var isoMap = {};
         isoMap[this.NONE] = "";
-        dojo.forEach(XUICache.Host.available_isos, function(iso) {
+        array.forEach(XUICache.Host.available_isos, function(iso) {
             isoMap[(XUICache.Host.available_isos.length == 1) ? this.TOOLS_CD : iso] = iso;
         }, this);
 
@@ -443,7 +453,7 @@ return declare("citrix.xenclient.VMDetails", [dialog, _boundContainerMixin, _edi
 
         var gpuMap = {};
         gpuMap[this.DISABLED] = "";
-        dojo.forEach(XUICache.Host.available_gpus, function(gpu) {
+        array.forEach(XUICache.Host.available_gpus, function(gpu) {
             gpuMap[(XUICache.Host.available_gpus.length == 1) ? this.ENABLED : gpu.name] = gpu.addr;
         }, this);
 
@@ -464,7 +474,7 @@ return declare("citrix.xenclient.VMDetails", [dialog, _boundContainerMixin, _edi
 
             var fieldClass = "";
             var widgets = [];
-            dojo.forEach(items, function(item, i) {
+            array.forEach(items, function(item, i) {
                 var itemClass = store.getValue(item, "class");
                 if(itemClass != fieldClass) {
                     domConstruct.create("h1", {innerHTML: itemClass}, this.customFieldsWrap);
@@ -538,7 +548,7 @@ return declare("citrix.xenclient.VMDetails", [dialog, _boundContainerMixin, _edi
         };
 
         store.fetch({
-            onComplete: dojo.hitch(this, createFields),
+            onComplete: lang.hitch(this, createFields),
             sort: [{attribute: "class"}]
         });
     },
@@ -573,13 +583,13 @@ return declare("citrix.xenclient.VMDetails", [dialog, _boundContainerMixin, _edi
 
     _updateSlotSelect: function() {
         var slotMap = {};
-        dojo.forEach(XUICache.getVmPaths(), function(path) {
+        array.forEach(XUICache.getVmPaths(), function(path) {
             var vm = XUICache.getVM(path);
             var name = (vm == this.vm) ? this.THIS_VM : vm.name.shorten(20);
             slotMap[vm.slot] = name;
         }, this);
 
-        var options = dojo.map(new Array(9), function(key, index) {
+        var options = array.map(new Array(9), function(key, index) {
             index += 1;
             var label = this.SWITCHER_KEY_MASK.format(index);
             if (slotMap[index]) {
@@ -609,7 +619,7 @@ return declare("citrix.xenclient.VMDetails", [dialog, _boundContainerMixin, _edi
     },
 
     _getDeviceID: function(node) {
-        return new dojo.NodeList(node).parents("tr").first()[0].getAttribute("deviceId");
+        return query(node).parents("tr").first()[0].getAttribute("deviceId");
     },
 
     _messageHandler: function(message) {

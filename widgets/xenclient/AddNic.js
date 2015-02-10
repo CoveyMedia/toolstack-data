@@ -1,6 +1,11 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/lang",
+    "dojo/_base/array",
+    "dojo/query",
+    "dojo/dom-class",
+    "dojo/topic",
     // Resources
     "dojo/i18n!citrix/xenclient/nls/AddNic",
     "dojo/text!citrix/xenclient/templates/AddNic.html",
@@ -14,7 +19,7 @@ define([
     "citrix/common/BoundWidget",
     "citrix/common/Button"
 ],
-function(dojo, declare, AddNicNls, template, dialog, _boundContainerMixin) {
+function(dojo, declare, lang, array, query, domClass, topic, AddNicNls, template, dialog, _boundContainerMixin) {
 return declare("citrix.xenclient.AddNic", [dialog, _boundContainerMixin], {
 
     templateString: template,
@@ -28,18 +33,20 @@ return declare("citrix.xenclient.AddNic", [dialog, _boundContainerMixin], {
     },
 
     postMixInProperties: function() {
-        dojo.mixin(this, AddNicNls);
+        lang.mixin(this, AddNicNls);
         this.inherited(arguments);
     },
 
     postCreate: function() {
         this.inherited(arguments);
-        this.subscribe(XUICache.Host.publish_topic, this._messageHandler);
+        this.own(
+            topic.subscribe(XUICache.Host.publish_topic, this.lang(this, this._messageHandler))
+        );
         this._bindDijit();
     },
 
     onNicSelect: function(event) {
-        if (dojo.hasClass(event.currentTarget, "disabled")) {
+        if (domClass.hasClass(event.currentTarget, "disabled")) {
             return;
         }
         var path = this._getNetworkPath(event.currentTarget);
@@ -55,7 +62,7 @@ return declare("citrix.xenclient.AddNic", [dialog, _boundContainerMixin], {
     onExecute: function() {
         XUtils.publish(XenConstants.TopicTypes.UI_SHOW_WAIT);
         var wireless = false;       
-        dojo.some(XUICache.Host.available_networks, function(network){
+        array.some(XUICache.Host.available_networks, function(network){
             if (network.object == this._network_path) {
                 switch(network.type) {
                     case XenConstants.Network.NETWORK_TYPE.WIFI:
@@ -83,7 +90,7 @@ return declare("citrix.xenclient.AddNic", [dialog, _boundContainerMixin], {
     },
 
     _getNetworkPath: function(node) {
-        return new dojo.NodeList(node).parents("li").first()[0].getAttribute("networkPath");
+        return query(node).parents("li").first()[0].getAttribute("networkPath");
     },
 
     _messageHandler: function(message) {

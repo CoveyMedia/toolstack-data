@@ -5,6 +5,7 @@ define([
     "dojo/text!citrix/common/templates/TabButton.html",
     // Mixins
     "dijit/layout/TabController"
+
 ],
 function(dojo, declare, template, tabController) {
 return declare("citrix.common.TabButton", [tabController.TabButton], {

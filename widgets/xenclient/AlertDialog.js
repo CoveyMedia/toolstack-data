@@ -1,6 +1,8 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/array",
+    "dojo/_base/lang",
     // Resources
     "dojo/i18n!citrix/xenclient/nls/Alerts",
     "dojo/i18n!citrix/xenclient/nls/AlertDialog",
@@ -11,7 +13,7 @@ define([
     "citrix/common/CheckBox",
     "citrix/common/Button"
 ],
-function(dojo, declare, alertsNls, alertDialogNls, template, dialog) {
+function(dojo, declare, array, lang, alertsNls, alertDialogNls, template, dialog) {
 return declare("citrix.xenclient.AlertDialog", [dialog], {
 
     templateString: template,
@@ -71,7 +73,7 @@ return declare("citrix.xenclient.AlertDialog", [dialog], {
 
     postMixInProperties: function() {
         this._alertSource = alertsNls;
-        dojo.mixin(this, alertDialogNls);
+        lang.mixin(this, alertDialogNls);
         this.inherited(arguments);
     },
 
@@ -190,7 +192,7 @@ return declare("citrix.xenclient.AlertDialog", [dialog], {
     _getErrorMessage: function(error, sourceHint) {
         var message = "";
         if (error.code && sourceHint) {
-            dojo.some(Object.keys(sourceHint), function(key) {
+            array.some(Object.keys(sourceHint), function(key) {
                 if (sourceHint[key] == error.code) {
                     message = this._alertSource[key];
                     return true;

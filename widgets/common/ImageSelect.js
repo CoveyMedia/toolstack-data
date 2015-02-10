@@ -1,6 +1,7 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/array",
     // Resources
     "dojo/text!citrix/common/templates/ImageSelect.html",
     // Mixins
@@ -11,7 +12,7 @@ define([
     // Required in code
     "citrix/common/ImageItem"
 ],
-function(dojo, declare, template, _layoutWidget, _templated, _keyNavContainerMixin, _editableMixin, imageItem) {
+function(dojo, declare, array, template, _layoutWidget, _templated, _keyNavContainerMixin, _editableMixin, imageItem) {
 return declare("citrix.common.ImageSelect", [_layoutWidget, _templated, _keyNavContainerMixin, _editableMixin], {
 
     templateString: template,
@@ -87,15 +88,15 @@ return declare("citrix.common.ImageSelect", [_layoutWidget, _templated, _keyNavC
     _updateChildren: function() {
         if (this.source != null) {
             var baseClass = (this.itemClassSmall != "" && this.source.length > this.classThreshold) ? this.itemClassSmall : this.itemClass;
-            dojo.forEach(this.source, function(srcItem) {
-                if (!dojo.some(this.getChildren(), function(item) { return srcItem == item.image; })) {
+            array.forEach(this.source, function(srcItem) {
+                if (!array.some(this.getChildren(), function(item) { return srcItem == item.image; })) {
                     // image doesn't exist in the children already, so add
                     var imageItem = new this.imageWidget({image: srcItem, baseClass: baseClass});
                     this.addChild(imageItem);
                 }
             }, this);
         }
-        dojo.forEach(this.getChildren(), function(item) {
+        array.forEach(this.getChildren(), function(item) {
             item.set("selected", (item.image == this.value));
             item.set("disabled", !this.editing);
         }, this);
@@ -104,7 +105,7 @@ return declare("citrix.common.ImageSelect", [_layoutWidget, _templated, _keyNavC
     findChild: function() {
         // want to return the child matching the current value
         var result = null;
-        dojo.some(this.getChildren(), function(child){
+        array.some(this.getChildren(), function(child){
             if(child.image == this.value) {
                 result = child;
                 return true;

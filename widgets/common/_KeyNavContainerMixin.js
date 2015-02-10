@@ -1,12 +1,18 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/event",
+    "dojo/_base/lang",
+    "dojo/keys",
     "dojo/dom-attr",
     "dojo/aspect",
+    "dojo/on",
+    "dojo/dom-geometry", 
+    "dojo/window",
     // Mixins
     "dijit/_KeyNavContainer"
 ],
-function(dojo, declare, domAttr, aspect, _keyNavContainer) {
+function(dojo, declare, event, lang, keys, attr, aspect, on, geometry, window, _keyNavContainer) {
 return declare("citrix.common._KeyNavContainerMixin", [_keyNavContainer], {
 // fixes some issues in dijit._KeyNavContainer and adds in support for selecting a child with enter and space.
 
@@ -15,34 +21,37 @@ return declare("citrix.common._KeyNavContainerMixin", [_keyNavContainer], {
 
     postCreate: function() {
         this.inherited(arguments);
-        this.connectKeyNavHandlers([dojo.keys.UP_ARROW, dojo.keys.LEFT_ARROW], [dojo.keys.DOWN_ARROW, dojo.keys.RIGHT_ARROW]);
+        this.connectKeyNavHandlers([keys.UP_ARROW, keys.LEFT_ARROW], [keys.DOWN_ARROW, keys.RIGHT_ARROW]);
     },
 
     startup: function() {
         this.inherited(arguments);
-        dojo.attr(this.domNode, "tabIndex", this.tabIndex);
-        aspect.after(this, "resize", function() {
+        attr.set(this.domNode, "tabIndex", this.tabIndex);
+        this.own(aspect.after(this, "resize", function() {
             this._focusChild();
-        });
+        }));
     },
 
     _onBlur: function(evt) {
         // overridden because the base function has forgotten that 0 is a valid tabIndex
         // but also equates to false in an if statement :/
         if(this.tabIndex == 0) {
-            dojo.attr(this.domNode, "tabIndex", this.tabIndex);
+            attr.set(this.domNode, "tabIndex", this.tabIndex);
         }
         this.inherited(arguments);
     },
-
+    
     _startupChild: function(/*dijit._Widget*/ widget) {
         this.inherited(arguments);
-        this.connect(widget, "onMouseDown", function(event) {
-            this.focusChild(widget);
-            dojo.attr(this.domNode, "tabIndex", "-1");
-            this._onChildSelected(widget);
-            dojo.stopEvent(event);
-        });
+        this.own(on(widget, 
+            "MouseDown", 
+            lang.hitch(this, function(e){
+               this.focusChild(widget);
+                attr.set(this.domNode, "tabIndex", "-1");
+                this._onChildSelected(widget);
+                event.stop(e);                
+                }), 
+            true));
     },
 
     _onContainerKeypress: function(evt){
@@ -50,13 +59,13 @@ return declare("citrix.common._KeyNavContainerMixin", [_keyNavContainer], {
         var func = this._keyNavCodes[evt.charOrCode];
         if(func){
             func();
-            dojo.stopEvent(evt);
+            event.stop(evt);
             if(this.selectOnNav) {
                 this._onChildSelected(this.focusedChild);
             }
-        } else if(evt.keyCode == dojo.keys.SPACE) {
+        } else if(evt.keyCode == keys.SPACE) {
             this._onChildSelected(this.focusedChild);
-            dojo.stopEvent(evt);
+            event.stop(evt);
         }
     },
 
@@ -72,14 +81,14 @@ return declare("citrix.common._KeyNavContainerMixin", [_keyNavContainer], {
         // (don't remove as that breaks Safari 4)
         // so that tab or shift-tab will go to the fields after/before
         // the container, rather than the container itself
-        domAttr.set(this.domNode, "tabIndex", "-1");
+        attr.set(this.domNode, "tabIndex", "-1");
     },
 
     _focusChild: function() {
 
         // Determine if the widget is off screen XC-10099
-        var pos = dojo.position (this.domNode);
-        var viewport = dojo.window.getBox();
+        var pos = geometry.position(this.domNode);
+        var viewport = window.getBox();
         if (pos.y > viewport.h) {
             return;
         }

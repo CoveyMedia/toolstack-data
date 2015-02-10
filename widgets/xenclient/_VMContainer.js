@@ -1,12 +1,15 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/lang",
+    "dojo/_base/array",
+    "dojo/topic",
     // Mixins
     "dijit/layout/_LayoutWidget",
     // Used in code
     "citrix/common/ItemFileReadStore"
 ],
-function(dojo, declare, _layoutWidget, itemFileReadStore) {
+function(dojo, declare, lang, array, topic, _layoutWidget, itemFileReadStore) {
 return declare("citrix.xenclient._VMContainer", [_layoutWidget], {
 
     vmStore: null,
@@ -17,13 +20,15 @@ return declare("citrix.xenclient._VMContainer", [_layoutWidget], {
 
     postCreate: function() {
         this.inherited(arguments);
-        this.subscribe(XUtils.publishTopic, this._messageHandler);
+        this.own(
+            topic.subscribe(XUtils.publishTopic, lang.hitch(this, this._messageHandler))
+        );
         this._createStore();
         this._sortChildren();
     },
 
     _deleteChildren: function() {
-        dojo.forEach(Object.keys(this.vms), function(key) {
+        array.forEach(Object.keys(this.vms), function(key) {
             if (typeof(XUICache.VMs[key]) === "undefined") {
                 this.removeChild(this.vms[key]);
                 this.vms[key].destroyRecursive();
@@ -34,7 +39,7 @@ return declare("citrix.xenclient._VMContainer", [_layoutWidget], {
 
     _createStore: function() {
         var values = [];
-        dojo.forEach(Object.keys(XUICache.VMs), function(key) {
+        array.forEach(Object.keys(XUICache.VMs), function(key) {
             var vm = XUICache.VMs[key];
             if (vm.loaded) {
                 var value = {vm_path: vm.vm_path, slot: vm.slot};
@@ -47,7 +52,7 @@ return declare("citrix.xenclient._VMContainer", [_layoutWidget], {
 
     _sortChildren: function() {
         this.vmStore.fetch({
-            onComplete: dojo.hitch(this, this._gotVMs),
+            onComplete: lang.hitch(this, this._gotVMs),
             sort: [{
                 attribute: "slot"
             }]

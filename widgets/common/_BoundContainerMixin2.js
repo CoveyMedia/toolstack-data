@@ -12,7 +12,7 @@ define([
     "dijit/registry"
 ],
 function(dojo, declare, array, lang, event, query, on, aspect, json, dijit, registry) {
-return declare("citrix.common._BoundContainerMixin", null, {
+return declare("citrix.common._BoundContainerMixin2", null, {
 
     _getPrefix: "get_",
     _setPrefix: "set_",
@@ -20,6 +20,7 @@ return declare("citrix.common._BoundContainerMixin", null, {
 
     constructor: function() {
         this._handles = [];
+        this._childWidgets = [];
     },
 
     postCreate: function() {
@@ -32,13 +33,17 @@ return declare("citrix.common._BoundContainerMixin", null, {
         var ignoreAttr = (includeTemplates) ? "" : "templateType";
         attribute = attribute || "name";
         var map = {};
-        array.forEach(this.getDescendants(rootNode, ignoreAttr), function(widget) {
+        //array.forEach(this._decendantWidgets, function(widget) {
+        array.forEach(this.getDecendantWidgets(), function(widget){
             if (!widget[attribute] || widget["bindIgnore"]) {
                 return;
             }
             var entry = map[widget[attribute]] || (map[widget[attribute]] = []);
             entry.push(widget);
         });
+        
+
+        
 
         for(var name in map){
             if (!map.hasOwnProperty(name)) {
@@ -179,16 +184,6 @@ return declare("citrix.common._BoundContainerMixin", null, {
         }
     },
 
-    getDescendants: function(rootNode, ignoreAttr) {
-        rootNode = rootNode || this.containerNode;
-        ignoreAttr = ignoreAttr || "";
-        var selector = "[widgetId]";
-        if (ignoreAttr != "") {
-            selector += ":not([" + ignoreAttr + "])";
-        }
-		return rootNode ? query(selector, rootNode).map(registry.byNode) : []; // dijit._Widget[]
-	},
-
     _setupSave: function(/*Array | undefined*/ widgets) {
         if(this.saveButton) {
             var self = this;
@@ -261,7 +256,46 @@ return declare("citrix.common._BoundContainerMixin", null, {
         }
         this.inherited(arguments);
     },
-
+    
+    // adds a child widget to the BoundContainer, 
+    // if not already present
+    addChildWidget:function(widget){
+        for(var i in this._childWidgets){
+            if(this._childWidgets[i].id == widget.id) return;
+        }
+        this._childWidgets.push(widget);
+    },
+    
+    // recursively get decenant widget
+    // returns an array of widgets
+    getDecendantWidgets: function(){
+      var ret = [];
+      array.forEach(this._childWidgets, function(widget){
+        ret.push(widget);
+        if(widget.hasOwnProperty("_childWidgets")){
+            ret = ret.concat(widget.getDecendantWidgets());
+        }
+      });
+      return ret;
+    },
+    
+    startChildWidgets: function(){
+        array.forEach(this._childWidgets, function(widget){
+                widget.startup();
+        });
+    },
+    
+    getChildWidget: function(widgetName){
+        for( var i = 0; i < this._childWidgets.length; i++){
+           if (this._childWidgets[i].name == widgetName){
+                return this._childWidgets[i];
+           } 
+ 
+        };
+        
+        return ret;
+    },
+    
     uninitialize: function() {
         array.forEach(this._handles, function(handle){handle.remove()});
     }

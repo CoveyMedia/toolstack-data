@@ -1130,3 +1130,4 @@ XenClient.UI.VMMiniModel = function(vm_path) {
         return !this.hidden_in_ui && !["svm", "pvm"].contains(this.type);
     };
 };
+

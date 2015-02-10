@@ -8,13 +8,15 @@ define([
     "citrix/common/Dialog",
     "citrix/common/_BoundContainerMixin",
     "citrix/common/_CitrixTooltipMixin",
+    // Required in code
+    "dojo/_base/lang",
     // Required in template
     "citrix/common/Select",
     "citrix/common/NumberSpinner",
     "citrix/common/Button",
     "citrix/common/Label"
 ],
-function(dojo, declare, addDiskNls, template, dialog, _boundContainerMixin, _citrixTooltipMixin) {
+function(dojo, declare, addDiskNls, template, dialog, _boundContainerMixin, _citrixTooltipMixin, lang) {
 return declare("citrix.xenclient.AddDisk", [dialog, _boundContainerMixin, _citrixTooltipMixin], {
 
     templateString: template,
@@ -27,7 +29,7 @@ return declare("citrix.xenclient.AddDisk", [dialog, _boundContainerMixin, _citri
     },
 
     postMixInProperties: function() {
-        dojo.mixin(this, addDiskNls);
+        lang.mixin(this, addDiskNls);
         this.inherited(arguments);
     },
 

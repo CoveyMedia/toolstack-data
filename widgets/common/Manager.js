@@ -1,10 +1,12 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/dnd/autoscroll",
+    "dojo/dom-geometry", 
     // Mixins
     "dojo/dnd/Manager"
 ],
-function(dojo, declare, manager) {
+function(dojo, declare, autoscroll, geometry, manager) {
 return declare("citrix.common.Manager", [manager], {
 
 //	OFFSET_X: 0,
@@ -16,7 +18,7 @@ return declare("citrix.common.Manager", [manager], {
 	onMouseMove: function(event) {
 		if(this.avatar) {
             if (this.autoScroll) {
-			    dojo.dnd.autoScrollNodes(event);
+			    autoscroll.autoScrollNodes(event);
             }
 
             var x = this._getAvatarX(event);
@@ -25,6 +27,7 @@ return declare("citrix.common.Manager", [manager], {
 			style.left = x + "px";
 			style.top  = y + "px";
 
+            // BROKEN, no replacement for dojo.isCopyKey as of 1/16/15
 			var copy = Boolean(this.source.copyState(dojo.isCopyKey(event)));
 			if(this.copy != copy){
 				this._setCopyStatus(copy);
@@ -43,7 +46,7 @@ return declare("citrix.common.Manager", [manager], {
             return this._avatarX;
         }
         if (this.verticalOnly) {
-            this._avatarX = dojo.coords(event.target.parentNode).x + this.OFFSET_X;
+            this._avatarX = geometry.position(event.target.parentNode).x + this.OFFSET_X;
             return this._avatarX;
         }
         return event.pageX + this.OFFSET_X;
@@ -54,7 +57,7 @@ return declare("citrix.common.Manager", [manager], {
             return this._avatarY;
         }
         if (this.horizontalOnly) {
-            this._avatarY = dojo.coords(event.target.parentNode).y + this.OFFSET_Y;
+            this._avatarY = geometry.position(event.target.parentNode).y + this.OFFSET_Y;
             return this._avatarY;
         }
         return event.pageY + this.OFFSET_Y;

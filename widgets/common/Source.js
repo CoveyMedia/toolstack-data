@@ -1,10 +1,13 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/dom-construct",
+    "dojo/dom",
+    "dijit/registry",
     // Mixins
     "dojo/dnd/Source"
 ],
-function(dojo, declare, source) {
+function(dojo, declare, construct, dom, registry, source) {
 return declare("citrix.common.Source", [source], {
 
     moveOnly: false,
@@ -21,15 +24,16 @@ return declare("citrix.common.Source", [source], {
    		// summary:
    		//		deletes all selected items
         //      overridden to also destroy the dijit if the node is actually a dijit
-   		var e = dojo.dnd._empty;
+   		//var e = dojo.dnd._empty;
+        var e = new Object();
    		for(var i in this.selection) {
             if(i in e){ continue; }
-            var n = dijit.byId(i);
+            var n = registry.byId(i);
             if(n) {
                 n.destroyRecursive(false);
             } else {
-                n = dojo.byId(i);
-                dojo.destroy(n);
+                n = dom.byId(i);
+                construct.destroy(n);
             }
             this.delItem(i);
    		}

@@ -1,13 +1,14 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/dom-class",
     // Resources
     "dojo/text!citrix/common/templates/WizardStepItem.html",
     // Mixins
     "dijit/_Widget",
     "dijit/_Templated"
 ],
-function(dojo, declare, template, _widget, _templated) {
+function(dojo, declare, domClass, template, _widget, _templated) {
 return declare("citrix.common.WizardStepItem", [_widget, _templated], {
 
     templateString: template,
@@ -15,7 +16,7 @@ return declare("citrix.common.WizardStepItem", [_widget, _templated], {
     baseClass: "citrixWizardStepItem",
 
     _setSelectedAttr: function(/*boolean*/ value){
-        value ? dojo.addClass(this.domNode, "citrixWizardStepSelected") : dojo.removeClass(this.domNode, "citrixWizardStepSelected");
+        value ? domClass.add(this.domNode, "citrixWizardStepSelected") : domClass.remove(this.domNode, "citrixWizardStepSelected");
     }
 });
 });

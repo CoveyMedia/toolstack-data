@@ -1,16 +1,17 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/lang",
     // Resources
     "dojo/i18n!citrix/xenclient/nls/Wizard",
     // Mixins
     "citrix/common/_WizardDialog"
 ],
-function(dojo, declare, wizardNls, _wizard) {
+function(dojo, declare, lang, wizardNls, _wizard) {
 return declare("citrix.xenclient._Wizard", [_wizard], {
 
     postMixInProperties: function() {
-        dojo.mixin(this, wizardNls);
+        lang.mixin(this, wizardNls);
 
         this.inherited(arguments);
     },

@@ -1,25 +1,25 @@
-<div dojoAttachPoint="containerNode"
-    ><div dojoType="citrix.common.MenuBar" dojoAttachPoint="menuNode" popupOrient="below-alt" id="frameHeader"
+<div data-dojo-attach-point="containerNode"
+    ><div data-dojo-type="citrix.common.MenuBar" data-dojo-attach-point="menuNode" popupOrient="below-alt" id="frameHeader"
         ><div class="citrixTitle"></div
-        ><div dojoAttachPoint="powerNode" class="left" dojoType="citrix.common.PopupMenuBarItem" iconClass="menuIcon menuIconPower" splitter="right">
+        ><div data-dojo-attach-point="powerNode" class="left" data-dojo-type="citrix.common.PopupMenuBarItem" iconClass="menuIcon menuIconPower" splitter="right">
             <span>${POWER_BUTTON}</span>
-            <div dojoType="citrix.common.Menu">
-                <div dojoType="citrix.common.MenuItem" dojoAttachEvent="onClick: onRestartClick">${RESTART_ACTION}</div>
-                <div dojoType="citrix.common.MenuItem" dojoAttachEvent="onClick: onRestartNoUpdateClick" dojoAttachPoint="restartNoUpdateNode">${RESTART_NO_UPDATE_ACTION}</div>
-                <div dojoType="citrix.common.MenuItem" dojoAttachEvent="onClick: onSleepClick">${SLEEP_ACTION}</div>
-                <div dojoType="citrix.common.MenuItem" dojoAttachEvent="onClick: onHibernateClick">${HIBERNATE_ACTION}</div>
-                <div dojoType="citrix.common.MenuItem" dojoAttachEvent="onClick: onLockClick" dojoAttachPoint="lockNode">${LOCK_SCREEN_ACTION}</div>
-                <div dojoType="citrix.common.MenuSeparator"></div>
-                <div dojoType="citrix.common.MenuItem" dojoAttachEvent="onClick: onShutdownClick">${SHUTDOWN_ACTION}</div>
-                <div dojoType="citrix.common.MenuItem" dojoAttachEvent="onClick: onShutdownNoUpdateClick" dojoAttachPoint="shutdownNoUpdateNode">${SHUTDOWN_NO_UPDATE_ACTION}</div>
+            <div data-dojo-type="citrix.common.Menu">
+                <div data-dojo-type="citrix.common.MenuItem" data-dojo-attach-event="onClick: onRestartClick">${RESTART_ACTION}</div>
+                <div data-dojo-type="citrix.common.MenuItem" data-dojo-attach-event="onClick: onRestartNoUpdateClick" data-dojo-attach-point="restartNoUpdateNode">${RESTART_NO_UPDATE_ACTION}</div>
+                <div data-dojo-type="citrix.common.MenuItem" data-dojo-attach-event="onClick: onSleepClick">${SLEEP_ACTION}</div>
+                <div data-dojo-type="citrix.common.MenuItem" data-dojo-attach-event="onClick: onHibernateClick">${HIBERNATE_ACTION}</div>
+                <div data-dojo-type="citrix.common.MenuItem" data-dojo-attach-event="onClick: onLockClick" data-dojo-attach-point="lockNode">${LOCK_SCREEN_ACTION}</div>
+                <div data-dojo-type="citrix.common.MenuSeparator"></div>
+                <div data-dojo-type="citrix.common.MenuItem" data-dojo-attach-event="onClick: onShutdownClick">${SHUTDOWN_ACTION}</div>
+                <div data-dojo-type="citrix.common.MenuItem" data-dojo-attach-event="onClick: onShutdownNoUpdateClick" data-dojo-attach-point="shutdownNoUpdateNode">${SHUTDOWN_NO_UPDATE_ACTION}</div>
             </div>
         </div
-        ><div class="left" dojoAttachPoint="mediaNode" dojoType="citrix.common.MenuBarItem" iconClass="menuIcon menuIconAdd" dojoAttachEvent="onClick: onMediaClick" splitter="right">${INSTALL_DISC_ACTION}</div
-        ><div class="left" dojoAttachPoint="icaNode" dojoType="citrix.common.MenuBarItem" iconClass="menuIcon menuIconConnect" dojoAttachEvent="onClick: onICAClick" splitter="right">${INSTALL_RECEIVER}</div
+        ><div class="left" data-dojo-attach-point="mediaNode" data-dojo-type="citrix.common.MenuBarItem" iconClass="menuIcon menuIconAdd" data-dojo-attach-event="onClick: onMediaClick" splitter="right">${INSTALL_DISC_ACTION}</div
+        ><div class="left" data-dojo-attach-point="icaNode" data-dojo-type="citrix.common.MenuBarItem" iconClass="menuIcon menuIconConnect" data-dojo-attach-event="onClick: onICAClick" splitter="right">${INSTALL_RECEIVER}</div
 
-        ><div dojoType="citrix.common.MenuBarItem" iconClass="menuIcon menuIconDevices" dojoAttachEvent="onClick: onDevicesClick" splitter="left" dojoAttachPoint="devicesNode">${DEVICES}</div
-        ><div dojoType="citrix.common.MenuBarItem" iconClass="menuIcon menuIconInformation" dojoAttachEvent="onClick: onInformationClick" splitter="left">${INFORMATION}</div
-        ><div dojoType="citrix.common.MenuBarItem" iconClass="menuIcon menuIconServices" dojoAttachEvent="onClick: onServicesClick" splitter="left" dojoAttachPoint="servicesNode">${SERVICES}</div
-        ><div dojoType="citrix.common.MenuBarItem" iconClass="menuIcon menuIconSystem" dojoAttachEvent="onClick: onSystemClick" splitter="left" dojoAttachPoint="settingsNode">${SYSTEM}</div
+        ><div data-dojo-type="citrix.common.MenuBarItem" iconClass="menuIcon menuIconDevices" data-dojo-attach-event="onClick: onDevicesClick" splitter="left" data-dojo-attach-point="devicesNode">${DEVICES}</div
+        ><div data-dojo-type="citrix.common.MenuBarItem" iconClass="menuIcon menuIconInformation" data-dojo-attach-event="onClick: onInformationClick" splitter="left">${INFORMATION}</div
+        ><div data-dojo-type="citrix.common.MenuBarItem" iconClass="menuIcon menuIconServices" data-dojo-attach-event="onClick: onServicesClick" splitter="left" data-dojo-attach-point="servicesNode">${SERVICES}</div
+        ><div data-dojo-type="citrix.common.MenuBarItem" iconClass="menuIcon menuIconSystem" data-dojo-attach-event="onClick: onSystemClick" splitter="left" data-dojo-attach-point="settingsNode">${SYSTEM}</div
     ></div>
 </div>

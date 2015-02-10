@@ -1,6 +1,9 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/array",
+    "dojo/_base/lang",
+    "dojo/topic",
     // Resources
     "dojo/i18n!citrix/xenclient/nls/Menus",
     "dojo/text!citrix/xenclient/templates/Menus.html",
@@ -25,7 +28,7 @@ define([
     "citrix/common/MenuSeparator",
     "citrix/common/PopupMenuBarItem"
 ],
-function(dojo, declare, menusNls, template, _widget, _templated, _citrixWidgetMixin, information, mediaWizard, receiver, serviceVMs, settings, devices, itemFileReadStore, networkMenuBarItem) {
+function(dojo, declare, array, lang, topic, menusNls, template, _widget, _templated, _citrixWidgetMixin, information, mediaWizard, receiver, serviceVMs, settings, devices, itemFileReadStore, networkMenuBarItem) {
 return declare("citrix.xenclient.Menus", [_widget, _templated, _citrixWidgetMixin], {
 
 	templateString: template,
@@ -42,7 +45,7 @@ return declare("citrix.xenclient.Menus", [_widget, _templated, _citrixWidgetMixi
     },
 
     postMixInProperties: function() {
-        dojo.mixin(this, menusNls);
+        lang.mixin(this, menusNls);
         this.inherited(arguments);
     },
 
@@ -53,9 +56,11 @@ return declare("citrix.xenclient.Menus", [_widget, _templated, _citrixWidgetMixi
         this._servicesPopup = new serviceVMs();
         this._receiverPopup = new receiver();
         this._devicesPopup = new devices();
-        this.subscribe(XUtils.publishTopic, this._messageHandler);
-        this.subscribe(XUICache.Host.publish_topic, this._messageHandler);
-        this.subscribe(XUICache.Update.publish_topic, this._messageHandler);
+        this.own(
+            topic.subscribe(XUtils.publishTopic, lang.hitch(this, this._messageHandler)),
+            topic.subscribe(XUICache.Host.publish_topic, lang.hitch(this, this._messageHandler)),
+            topic.subscribe(XUICache.Update.publish_topic, lang.hitch(this, this._messageHandler))
+        );
         this._bindDijit();
         this._createNDVMStore();
         this._sortNDVMs();
@@ -150,7 +155,7 @@ return declare("citrix.xenclient.Menus", [_widget, _templated, _citrixWidgetMixi
     },
 
     _deleteNDVMs: function() {
-        dojo.forEach(Object.keys(this.ndvms), function(key) {
+        array.forEach(Object.keys(this.ndvms), function(key) {
             if (typeof(XUICache.NDVMs[key]) === "undefined") {
                 this.menuNode.removeChild(this.ndvms[key]);
                 this.ndvms[key].destroyRecursive();
@@ -161,7 +166,7 @@ return declare("citrix.xenclient.Menus", [_widget, _templated, _citrixWidgetMixi
 
     _createNDVMStore: function() {
         var values = [];
-        dojo.forEach(Object.keys(XUICache.NDVMs), function(key) {
+        array.forEach(Object.keys(XUICache.NDVMs), function(key) {
             var ndvm = XUICache.NDVMs[key];
             var value = {ndvm_path: ndvm.ndvm_path, name: ndvm.name};
             values.push(value);
@@ -172,7 +177,7 @@ return declare("citrix.xenclient.Menus", [_widget, _templated, _citrixWidgetMixi
 
     _sortNDVMs: function() {
         this.ndvmStore.fetch({
-            onComplete: dojo.hitch(this, this._gotNDVMs),
+            onComplete: lang.hitch(this, this._gotNDVMs),
             sort: [{
                 attribute: "name"
             }]
@@ -180,7 +185,7 @@ return declare("citrix.xenclient.Menus", [_widget, _templated, _citrixWidgetMixi
     },
 
     _gotNDVMs: function(items, request) {
-        dojo.forEach(items, function(item, i) {
+        array.forEach(items, function(item, i) {
             var ndvm_path = this.ndvmStore.getValue(item, "ndvm_path");
             if (typeof(this.ndvms[ndvm_path]) === "undefined") {
                 this.ndvms[ndvm_path] = new networkMenuBarItem({ path: ndvm_path, defaultLabel: this.NETWORK });

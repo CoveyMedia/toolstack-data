@@ -1,6 +1,11 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/kernel",
+    "dojo/_base/lang",
+    "dojo/_base/array",
+    "dojo/on",
+    "dojo/aspect",
     // Resources
     "dojo/text!citrix/common/templates/asmSelect.html",
     // Mixins
@@ -14,7 +19,7 @@ define([
     "citrix/common/Source",
     "citrix/common/Select"
 ],
-function(dojo, declare, template, _widget, _templated, _cssStateMixin, _citrixWidgetMixin, asmSelectNode) {
+function(dojo, declare, kernel, lang, array, on, aspect, template, _widget, _templated, _cssStateMixin, _citrixWidgetMixin, asmSelectNode) {
 return declare("citrix.common.asmSelect", [_widget, _templated, _cssStateMixin, _citrixWidgetMixin], {
 
     templateString: template,
@@ -27,27 +32,34 @@ return declare("citrix.common.asmSelect", [_widget, _templated, _cssStateMixin, 
     constructor: function() {
         this._nodeHandles = {};
         this._nodeRefs = {};
+        
     },
 
     postCreate: function() {
         this.inherited(arguments);
-        if (!dojo.dnd._manager) {
-            dojo.dnd._manager = new citrix.common.Manager();
-            dojo.dnd._manager.verticalOnly = true;
+        if (!kernel.global._manager) {
+            kernel.global._manager = new citrix.common.Manager();
+            kernel.global._manager.verticalOnly = true;
         }
         this._dndWidget = new citrix.common.Source(this.dndNode, {singular: true, moveOnly: true});
-        this._dndWidget.creator = dojo.hitch(this, "_deletableNodeCreator");
+        this._dndWidget.creator = lang.hitch(this, "_deletableNodeCreator");
         this._selectWidget = new citrix.common.Select({options: this.options, emptyLabel: this.label}, this.selectNode);
         this._selectWidget._loadChildren(true);
         this._selectWidget.set("value", "");
         this._selectWidget._isLoaded = true;
-        this.connect(this._selectWidget, "onChange", "_onSelectChange");
-        this.connect(this._dndWidget, "onDrop", "_onDrop");
+        //this.own(on(this._selectWidget, "Change", "_onSelectChange"));
+        //this.own(on(this._dndWidget, "Drop", "_onDrop"));
+        //BROKEN
+        //this.own(aspect.after(this.selectNode, "Change", lang.hitch(this, this._onSelectChange), true));
+        //this.own(aspect.after(this.dndNode, "Drop", lang.hitch(this, this._onDrop), true));
+        this._selectWidget.watch("value", lang.hitch(this, this._onSelectChange));
+        this._dndWidget.on("drop", lang.hitch(this, this._onDrop));
+        
     },
 
     _getValueAttr: function() {
         var options = [];
-        dojo.forEach(this._dndWidget.getAllNodes(), function(node) {
+        array.forEach(this._dndWidget.getAllNodes(), function(node) {
             this._dndWidget.forInItems(function(data, id) {
                 if (node.id == id) {
                     options.push(data.data.value);
@@ -62,9 +74,10 @@ return declare("citrix.common.asmSelect", [_widget, _templated, _cssStateMixin, 
         this._setup();
     },
 
-    _onSelectChange: function() {
-        var value = this._selectWidget.get("value");
-        this._selectToDnd(value);
+    _onSelectChange: function(name, oldval, newval) {
+        //var value = this._selectWidget.get("value");
+        //this._selectToDnd(value);
+        this._selectToDnd(newval);
     },
 
     _selectToDnd: function(value) {
@@ -91,7 +104,7 @@ return declare("citrix.common.asmSelect", [_widget, _templated, _cssStateMixin, 
             this._dndWidget.selectAll();
             for(var handle in this._nodeHandles) {
                 if(this._nodeHandles.hasOwnProperty(handle)) {
-                    dojo.disconnect(this._nodeHandles[handle]);
+                    //this._nodeHandles[handle].remove();
                     delete this._nodeHandles[handle];
                 }
             }
@@ -103,9 +116,9 @@ return declare("citrix.common.asmSelect", [_widget, _templated, _cssStateMixin, 
             }
             this._dndWidget.deleteSelectedNodes();
         } else if(nodeIds) {
-            dojo.forEach(nodeIds, function(nodeId) {
+            array.forEach(nodeIds, function(nodeId) {
                 this._dndWidget.selection[nodeId] = {};
-                dojo.disconnect(this._nodeHandles[nodeId]);
+                //this._nodeHandles[nodeId].remove();
                 delete this._nodeHandles[nodeId];
                 this._nodeRefs[nodeId].destroyRecursive();
                 delete this._nodeRefs[nodeId];
@@ -126,7 +139,7 @@ return declare("citrix.common.asmSelect", [_widget, _templated, _cssStateMixin, 
 
     _getSelectOption: function(value) {
         var result = null;
-        dojo.some(this._selectWidget._getChildren(), function(child) {
+        array.some(this._selectWidget._getChildren(), function(child) {
             if (child.option.value == value) {
                 result = child;
                 return true;
@@ -137,7 +150,7 @@ return declare("citrix.common.asmSelect", [_widget, _templated, _cssStateMixin, 
 
     _optionFromValue: function(value) {
         var result = null;
-        dojo.some(this.options, function(option) {
+        array.some(this.options, function(option) {
             if (option.value == value) {
                 result = option;
                 return true;
@@ -148,18 +161,19 @@ return declare("citrix.common.asmSelect", [_widget, _templated, _cssStateMixin, 
 
     _setup: function() {
         this._deleteNodes(true);
-        dojo.forEach(this.options, function(option) {
+        array.forEach(this.options, function(option) {
             var node = this._getSelectOption(option.value);
             this._setEnabled(node, true);
         }, this);
-        dojo.forEach(this.value, this._selectToDnd, this);
+        array.forEach(this.value, this._selectToDnd, this);
     },
 
     _deletableNodeCreator: function(item, hint) {
         var node = new asmSelectNode({item: item, hint: hint});
         this._nodeRefs[node.id] = node;
         if(hint != "avatar") {
-            this._nodeHandles[node.id] = dojo.connect(node, "deleteNode", this, "_dndToSelect");
+            this.own(aspect.after(node, "deleteNode", lang.hitch(this, "_dndToSelect"), true))
+            //this._nodeHandles[node.id] = on(node, "deleteNode", this, "_dndToSelect");
         }
         return { node: node.domNode, data: item };
     },
@@ -167,7 +181,7 @@ return declare("citrix.common.asmSelect", [_widget, _templated, _cssStateMixin, 
     uninitialize: function() {
         for(var handle in this._nodeHandles) {
             if(this._nodeHandles.hasOwnProperty(handle)) {
-                dojo.disconnect(this._nodeHandles[handle]);
+                //this._nodeHandles[handle].remove();
                 delete this._nodeHandles[handle];
             }
         }

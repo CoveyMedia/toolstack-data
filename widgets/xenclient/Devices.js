@@ -1,12 +1,19 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/lang",
+    "dojo/_base/array",
+    "dojo/query",
+    "dojo/topic",
+    "dijit/a11y",
+    "dijit/registry",
+    "citrix/common/Repeater2",
     // Resources
     "dojo/i18n!citrix/xenclient/nls/Devices",
     "dojo/text!citrix/xenclient/templates/Devices.html",
     // Mixins
     "citrix/common/Dialog",
-    "citrix/common/_BoundContainerMixin",
+    "citrix/common/_BoundContainerMixin2",
     "citrix/common/_CitrixTooltipMixin",
     // Required in template
     "citrix/common/Button",
@@ -15,7 +22,7 @@ define([
     "citrix/common/BoundContainer",
     "citrix/common/Select"
 ],
-function(dojo, declare, nls, template, dialog, _boundContainerMixin, _citrixTooltipMixin) {
+function(dojo, declare, lang, array, query, topic, a11y, registry, Repeater, nls, template, dialog, _boundContainerMixin, _citrixTooltipMixin) {
 return declare("citrix.xenclient.Devices", [dialog, _boundContainerMixin, _citrixTooltipMixin], {
 
     templateString: template,
@@ -26,15 +33,39 @@ return declare("citrix.xenclient.Devices", [dialog, _boundContainerMixin, _citri
     },
 
     postMixInProperties: function() {
-        dojo.mixin(this, nls);
+        lang.mixin(this, nls);
         this.inherited(arguments);
     },
 
     postCreate: function() {
         this.inherited(arguments);
         this.startup();
-        this.subscribe(XUICache.Host.publish_topic, this._messageHandler);
-        this.subscribe(XUtils.publishTopic, this._messageHandler);
+ 
+        this.addChildWidget(new Repeater({
+            name: "cdromDevices",
+            dojoEventHandler: this,
+            unbindDisabled: true,
+            uniqueId: "id" 
+        }, this.id + "_cdromDevices"));
+        
+        this.addChildWidget(new Repeater({
+            name: "usbDevices",
+            dojoEventHandler: this, 
+            unbindDisabled: true,
+            uniqueId: "dev_id"
+        }, this.id + "_usbDevices"));
+        
+       this.addChildWidget(new Repeater({ 
+            name: "getPlatformDevices",
+            dojoEventHandler: this 
+        }, this.id + "_getPlatformDevices"));
+        this.startChildWidgets();
+        this.own(
+            topic.subscribe(XUICache.Host.publish_topic, lang.hitch(this, this._messageHandler)),
+            topic.subscribe(XUtils.publishTopic, lang.hitch(this, this._messageHandler))
+        );
+
+        
         this._bindDijit();
     },
 
@@ -49,8 +80,8 @@ return declare("citrix.xenclient.Devices", [dialog, _boundContainerMixin, _citri
         var usbCDAssigned = false;
         var values = this.unbind();
 
-        dojo.forEach(XUICache.Host.available_cds, function(cdrom) {
-            dojo.some(values.cdromDevices, function(device) {
+        array.forEach(XUICache.Host.available_cds, function(cdrom) {
+            array.some(values.cdromDevices, function(device) {
                 // Find the matching device
                 if (cdrom.id == device.id) {
 
@@ -82,7 +113,7 @@ return declare("citrix.xenclient.Devices", [dialog, _boundContainerMixin, _citri
             }, this);
         }, this);
 
-        dojo.forEach(values.usbDevices, function(device) {
+        array.forEach(values.usbDevices, function(device) {
             var usb = XUICache.Host.usbDevices[device.dev_id];
             // Only interested in assigned devices on running VMs
             if (usb.assigned_uuid != "") {
@@ -95,8 +126,8 @@ return declare("citrix.xenclient.Devices", [dialog, _boundContainerMixin, _citri
             }
         }, this);
 
-        var complete = dojo.hitch(this, function complete() {
-            this.saveValues(this.host, values, dojo.hitch(this, function() {
+        var complete = lang.hitch(this, function complete() {
+            this.saveValues(this.host, values, lang.hitch(this, function() {
                 XUICache.Host.publish(XenConstants.TopicTypes.MODEL_USB_CHANGED);
 
                 if (usbCDAssigned) {
@@ -121,7 +152,7 @@ return declare("citrix.xenclient.Devices", [dialog, _boundContainerMixin, _citri
     },
 
     _getDeviceID: function(node) {
-        return new dojo.NodeList(node).parents("tr").first()[0].getAttribute("deviceId");
+        return query(node).parents("tr").first()[0].getAttribute("deviceId");
     },
 
     _bindDijit: function() {
@@ -129,7 +160,7 @@ return declare("citrix.xenclient.Devices", [dialog, _boundContainerMixin, _citri
         this.bind(this.host);
         this._onCDChange();
         this._onUSBChange();
-        var node = dijit.getFirstInTabbingOrder(this.domNode);
+        var node = a11y.getFirstInTabbingOrder(this.domNode);
 
         if(node) {
             node.focus();
@@ -142,7 +173,7 @@ return declare("citrix.xenclient.Devices", [dialog, _boundContainerMixin, _citri
         var cdMap = [];
         var usbMap = [];
 
-        dojo.forEach(Object.keys(XUICache.VMs), function(key) {
+        array.forEach(Object.keys(XUICache.VMs), function(key) {
             var vm = XUICache.VMs[key];
             cdMap.push({ "label": vm.name, "value": vm.uuid });
             usbMap.push({ "label": vm.name, "value": vm.uuid, "disabled": !vm.canAddDevice() });
@@ -151,26 +182,26 @@ return declare("citrix.xenclient.Devices", [dialog, _boundContainerMixin, _citri
         cdMap.unshift({ "label": this.NONE, "value": "" });
         usbMap.unshift({ "label": this.NONE, "value": "" });
 
-        this.cdromDevices.setOptions("cdVMList", cdMap);
-        this.usbDevices.setOptions("usbVMList", usbMap);
+        this.getChildWidget("cdromDevices").setOptions("cdVMList", cdMap);
+        this.getChildWidget("usbDevices").setOptions("usbVMList", usbMap);
     },
 
     _onCDChange: function() {
-        dojo.forEach(XUICache.Host.available_cds, function(cdrom) {
+        array.forEach(XUICache.Host.available_cds, function(cdrom) {
             this._setControls(cdrom.id, "cd");
         }, this);
     },
 
     _onUSBChange: function() {
-        dojo.forEach(XUICache.Host.get_usbDevices(), function(usb) {
+        array.forEach(XUICache.Host.get_usbDevices(), function(usb) {
             this._setControls(usb.dev_id, "usb");
         }, this);        
     },
 
     _setControls: function(deviceID, prefix) {
-        var check = dijit.byId(prefix + "_check_" + deviceID);
-        var select = dijit.byId(prefix + "_select_" + deviceID);
-        var name = dijit.byId(prefix + "_name_" + deviceID);
+        var name = registry.byId(prefix + "_name_" + deviceID);
+        var check = registry.byId(prefix + "_check_" + deviceID);
+        var select = registry.byId(prefix + "_select_" + deviceID);
 
         if (check && select) {
             if (prefix != "usb" || this.host.policy_modify_usb_settings){

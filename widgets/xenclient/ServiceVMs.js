@@ -1,20 +1,25 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/array",
+    "dojo/_base/lang",
+    "dojo/query",
+    "dojo/topic",
+    "dijit/registry",
     // Resources
     "dojo/i18n!citrix/xenclient/nls/ServiceVMs",
     "dojo/text!citrix/xenclient/templates/ServiceVMs.html",
     // Mixins
     "citrix/common/Dialog",
-    "citrix/common/_BoundContainerMixin",
+    //"citrix/common/_BoundContainerMixin", Replacing deprecated bindings
+    "citrix/common/_BoundContainerMixin2",
+    "citrix/common/Button",
+    "citrix/common/Repeater2",
     //Required in code
     "citrix/xenclient/VMDetails",
-    "dojo/NodeList-traverse",
-    // Required in template
-    "citrix/common/Button",
-    "citrix/common/Repeater"
+    "dojo/NodeList-traverse"
 ],
-function(dojo, declare, servicesNls, template, dialog, _boundContainerMixin, vmDetails) {
+function(dojo, declare, array, lang, query, topic, registry, servicesNls, template, dialog, _boundContainerMixin, Button, Repeater, vmDetails) {
 return declare("citrix.xenclient.ServiceVMs", [dialog, _boundContainerMixin], {
 
 	templateString: template,
@@ -22,15 +27,25 @@ return declare("citrix.xenclient.ServiceVMs", [dialog, _boundContainerMixin], {
     _vmHandles: [],
 
     postMixInProperties: function() {
-        dojo.mixin(this, servicesNls);
+        lang.mixin(this, servicesNls);
         this.inherited(arguments);
     },
 
     postCreate: function() {
         this.inherited(arguments);
+        
+        this.addChildWidget(new Repeater({
+            name: "serviceVMs",
+            dojoEventHandler: this
+        }, this.id + "_usbDevicesRepeater"));
+        
+        
         this.startup();
-        this.subscribe("com.citrix.xenclient.xenmgr", this._messageHandler);
-        this.subscribe(XUtils.publishTopic, this._messageHandler);
+        this.startChildWidgets();
+        this.own(
+            topic.subscribe("com.citrix.xenclient.xenmgr", lang.hitch(this, this._messageHandler)),
+            topic.subscribe(XUtils.publishTopic, lang.hitch(this, this._messageHandler))
+        );
         this._createSubscriptions();
         this._bindDijit();
     },
@@ -51,19 +66,20 @@ return declare("citrix.xenclient.ServiceVMs", [dialog, _boundContainerMixin], {
     },
 
     _createSubscriptions: function() {
-        dojo.forEach(this._vmHandles, function(handle) {
-            dojo.unsubscribe(handle);
+        array.forEach(this._vmHandles, function(handle) {
+            handle.remove();
         });
         this._vmHandles = [];
         for(var service in XUICache.ServiceVMs) {
-            this._vmHandles.push(dojo.subscribe(XUICache.ServiceVMs[service].publish_topic, dojo.hitch(this, this._messageHandler)));
+            this._vmHandles.push(topic.subscribe(XUICache.ServiceVMs[service].publish_topic, lang.hitch(this, this._messageHandler)));
         }
     },
 
     onEdit: function(event) {
-        var path = new dojo.NodeList(event.target).parents("tr")[0].getAttribute("deviceId");
+        /* TODO: test this */
+        var path = query(event.target).parents("tr")[0].getAttribute("deviceId");
         var found = false;
-        dojo.some(dijit.registry.findWidgets(document.body), function(widget) {
+        array.some(registry.findWidgets(document.body), function(widget) {
             // check to see if there is already a matching VMDetails open. If so, reuse that.
             if(widget.declaredClass == vmDetails.prototype.declaredClass && widget.path == path) {
                 widget.show();
@@ -97,8 +113,8 @@ return declare("citrix.xenclient.ServiceVMs", [dialog, _boundContainerMixin], {
     },
 
     uninitialize: function() {
-        dojo.forEach(this._vmHandles, function(handle) {
-            dojo.unsubscribe(handle);
+        array.forEach(this._vmHandles, function(handle) {
+            handle.remove();
         });
         this.inherited(arguments);
     }

@@ -1,10 +1,11 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/array",
     // Mixins
     "citrix/common/Select"
 ],
-function(dojo, declare, select) {
+function(dojo, declare, array, select) {
 return declare("citrix.xenclient.AudioSelect", [select], {
 
     _setValueAttr: function(newValue) {
@@ -13,7 +14,7 @@ return declare("citrix.xenclient.AudioSelect", [select], {
             var values = newValue.split("' '");
             var value = values.shift().substr(9);
 
-            this.options = dojo.map(values, function(option) {
+            this.options = array.map(values, function(option) {
                 if (option.endsWith("'")) {
                     option = option.substring(0, option.length-1);
                 }

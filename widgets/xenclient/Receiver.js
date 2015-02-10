@@ -1,6 +1,7 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/lang",
     // Resources
     "dojo/i18n!citrix/xenclient/nls/Receiver",
     "dojo/text!citrix/xenclient/templates/Receiver.html",
@@ -11,7 +12,7 @@ define([
     "citrix/common/ValidationTextBox",
     "citrix/common/Button"
 ],
-function(dojo, declare, receiverNls, template, dialog, _citrixWidgetMixin) {
+function(dojo, declare, lang, receiverNls, template, dialog, _citrixWidgetMixin) {
 return declare("citrix.xenclient.Receiver", [dialog, _citrixWidgetMixin], {
 
 	templateString: template,
@@ -20,7 +21,7 @@ return declare("citrix.xenclient.Receiver", [dialog, _citrixWidgetMixin], {
     needsValidation: true,
 
     postMixInProperties: function() {
-        dojo.mixin(this, receiverNls);
+        lang.mixin(this, receiverNls);
         this.inherited(arguments);
     },
 
@@ -56,10 +57,10 @@ return declare("citrix.xenclient.Receiver", [dialog, _citrixWidgetMixin], {
 */
         var args = arguments;
 
-        XUICache.Host.createVMWithUI("new-vm-ica", this.nameNode.get("value"), "", "images/vms/Receiver_VM.png", dojo.hitch(this, function(vm_path) {
-            XUICache.loadVMModel(vm_path, dojo.hitch(this, function(vm) {
+        XUICache.Host.createVMWithUI("new-vm-ica", this.nameNode.get("value"), "", "images/vms/Receiver_VM.png", lang.hitch(this, function(vm_path) {
+            XUICache.loadVMModel(vm_path, lang.hitch(this, function(vm) {
                 vm.url = url;
-                vm.save(dojo.hitch(this, function() {
+                vm.save(lang.hitch(this, function() {
                     this.inherited(args);
                     XUtils.publish(XenConstants.TopicTypes.UI_HIDE_WAIT);
 //                    vm.start();

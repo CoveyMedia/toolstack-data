@@ -1,10 +1,12 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/lang",
     "dijit/popup",
+    "dijit/registry",
     "dijit/focus"
 ],
-function(dojo, declare, dPopup, focus) {
+function(dojo, declare, lang, dPopup, registry, focus) {
 return declare("citrix.common._KeyboardAttachMixin", null, {
 
     _showKeyboard: false,
@@ -55,10 +57,10 @@ return declare("citrix.common._KeyboardAttachMixin", null, {
 
     onBlur: function() {
         this.inherited(arguments);
-        var handle = focus.watch("curNode", dojo.hitch(this, function(prop, oldVal, newVal) {
+        var handle = focus.watch("curNode", lang.hitch(this, function(prop, oldVal, newVal) {
             if(newVal != null) {
-                handle.unwatch();
-                var widget = dijit.byNode(newVal);
+                handle.remove();
+                var widget = registry.byNode(newVal);
                 if(this._keyboardOpen == true && (!widget || widget.declaredClass != "citrix.xenclient.Keyboard")) {
                     dPopup.close(XUICache.Host.keyboard);
                 }

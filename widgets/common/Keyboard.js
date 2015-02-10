@@ -1,8 +1,20 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/lang",
+    "dojo/_base/array",
     "dojo/NodeList-manipulate",
     "dojo/NodeList-traverse",
+    "dojo/query",
+    "dojo/has",
+    "dojo/sniff",
+    "dojo/dom-class",
+    "dojo/dom-geometry",
+    "dojo/window",
+    "dojo/dom-style",
+    "dojo/dom-construct",
+    "dojo/on",
+    "dojo/mouse",
     // Resources
     "dojo/text!citrix/common/templates/Keyboard.html",
     // Mixins
@@ -10,7 +22,8 @@ define([
     "dijit/_Templated",
     "dijit/_CssStateMixin"
 ],
-function(dojo, declare, manipulate, traverse, template, _widget, _templated, _cssStateMixin) {
+function(dojo, declare, lang, array, manipulate, traverse, query, has, sniff, domClass, 
+    geometry, window, style, construct, on, mouse, template, _widget, _templated, _cssStateMixin) {
 return declare("citrix.common.Keyboard", [_widget, _templated, _cssStateMixin], {
 
     templateString: template,
@@ -929,7 +942,9 @@ this.VKI_layout['\u4e2d\u6587\u6ce8\u97f3\u7b26\u53f7'] = {
     },
 
     uninitialize: function() {
-        dojo.forEach(this._handlers, dojo.disconnect);
+        array.forEach(this._handlers, function(handle){
+            handle.remove();
+        });
         this.inherited(arguments);
     },
 
@@ -942,18 +957,18 @@ this.VKI_layout['\u4e2d\u6587\u6ce8\u97f3\u7b26\u53f7'] = {
             this.modifyKeys("reset");
         }
 
-        var windowBox = dojo.window.getBox();
+        var windowBox = window.getBox();
         // position correctly
-        var targetPos = dojo.position(this.targetNode);
+        var targetPos = geometry.position(this.targetNode);
         // dock at bottom by default
-        var top = windowBox.h - dojo.marginBox(document.getElementById("frameFooter")).h - bestPosition.h;
+        var top = windowBox.h - geometry.getMarginBox(document.getElementById("frameFooter")).h - bestPosition.h;
         // if target bottom, is more than keyboard top
         if((targetPos.y + targetPos.h) >= top) {
             // dock at top instead
-            top = dojo.marginBox(document.getElementById("frameHeader")).h;
+            top = geometry.getMarginBox(document.getElementById("frameHeader")).h;
         }
 
-        dojo.marginBox(XUICache.Host.keyboard.domNode.parentNode, {h: bestPosition.h, w: windowBox.w, t: top, l: 0});
+        geometry.setMarginBox(XUICache.Host.keyboard.domNode.parentNode, {h: bestPosition.h, w: windowBox.w, t: top, l: 0});
         this.targetWidget._keyboardOpen = true;
     },
 
@@ -972,60 +987,60 @@ this.VKI_layout['\u4e2d\u6587\u6ce8\u97f3\u7b26\u53f7'] = {
         this.inherited(arguments);
         this._keysCreated = false;
         this.buildKeys(0);
-        dojo.style(this.domNode, "width", "{0}px".format(document.width));
+        style.set(this.domNode, "width", "{0}px".format(document.width));
     },
 
     buildKeys: function(index) {
         if(!this._keysCreated) {
-            dojo.NodeList(this.keyboard).empty();
-            dojo.forEach(this._handlers, dojo.disconnect);
+            query.NodeList(this.keyboard).empty();
+            array.forEach(this._handlers, function(handle){handle.remove();});
             this._handlers = [];
         }
-        dojo.forEach(this._currentLayout.keys, dojo.hitch(this, function(row, i) {
+        array.forEach(this._currentLayout.keys, lang.hitch(this, function(row, i) {
             var keysList;
             if(this._keysCreated) {
-                keysList = dojo.NodeList(dojo.query(".keyboardRow")[i]).children();
+                keysList = query.NodeList(query(".keyboardRow")[i]).children();
             } else {
-                keysList = new dojo.NodeList();
+                keysList = new query.NodeList();
             }
-            dojo.forEach(row, dojo.hitch(this, function(keySet, j) {
+            array.forEach(row, lang.hitch(this, function(keySet, j) {
                 var keyWrapper;
                 var keyElement;
                 if(this._keysCreated) {
                     keyWrapper = keysList[j];
                     keyElement = keyWrapper.children[0];
                 } else {
-                    keyWrapper = dojo.create("div");
-                    keyElement = dojo.create("span", null, keyWrapper);
+                    keyWrapper = construct.create("div");
+                    keyElement = construct.create("span", null, keyWrapper);
                     keysList.push(keyWrapper);
-                    this._handlers.push(dojo.connect(keyElement, "onclick", this, this.clickHandler));
-                    this._handlers.push(dojo.connect(keyElement, "onmouseover", this, this.mouseOverHandler));
-                    this._handlers.push(dojo.connect(keyElement, "onmouseout", this, this.mouseOutHandler));
-                    this._handlers.push(dojo.connect(keyElement, "onmousedown", this, this.mouseDownHandler));
-                    this._handlers.push(dojo.connect(keyElement, "onmouseup", this, this.mouseUpHandler));
-                    dojo.addClass(keyWrapper, "keyboardKey");
+                    this._handlers.push(on(keyElement, "click", lang.hitch(this, this.clickHandler)));
+                    this._handlers.push(on(keyElement, mouse.over, lang.hitch(this, this.mouseOverHandler)));
+                    this._handlers.push(on(keyElement, mouse.out, lang.hitch(this, this.mouseOutHandler)));
+                    this._handlers.push(on(keyElement, mouse.down, lang.hitch(this, this.mouseDownHandler)));
+                    this._handlers.push(on(keyElement, mouse.up, lang.hitch(this, this.mouseUpHandler)));
+                    domClass.add(keyWrapper, "keyboardKey");
                     if(keySet[0] == " ") {
-                        dojo.addClass(keyWrapper, "space");
+                        domClass.add(keyWrapper, "space");
                     } else if(["Alt", "AltGr", "AltLk", "Caps", "Shift", "Tab", "Enter", "Bksp"].contains(keySet[0])) {
-                        dojo.addClass(keyWrapper, "controlKey");
+                        domClass.add(keyWrapper, "controlKey");
                     }
                 }
                 switch(keySet[0]) {
                     case "Alt":
                     case "AltGr":
-                        dojo.toggleClass(keyElement, "keyPressed", this._altGrPressed);
+                        domClass.toggle(keyElement, "keyPressed", this._altGrPressed);
                         keyElement.innerHTML = keySet[0];
                         break;
                     case "AltLk":
-                        dojo.toggleClass(keyElement, "keyPressed", this._altGrLocked);
+                        domClass.toggle(keyElement, "keyPressed", this._altGrLocked);
                         keyElement.innerHTML = keySet[0];
                         break;
                     case "Caps":
-                        dojo.toggleClass(keyElement, "keyPressed", this._shiftLocked);
+                        domClass.toggle(keyElement, "keyPressed", this._shiftLocked);
                         keyElement.innerHTML = keySet[0];
                         break;
                     case "Shift":
-                        dojo.toggleClass(keyElement, "keyPressed", this._shiftPressed);
+                        domClass.toggle(keyElement, "keyPressed", this._shiftPressed);
                         keyElement.innerHTML = keySet[0];
                         break;
                     case "Tab":
@@ -1065,7 +1080,7 @@ this.VKI_layout['\u4e2d\u6587\u6ce8\u97f3\u7b26\u53f7'] = {
                     var children = parent.getChildren();
                     var id = this.targetWidget.id;
                     this.onCancel(); // this removes targetWidget reference
-                    dojo.some(children, function(child) {
+                    array.some(children, function(child) {
                         if(meFound && child.focus) { // easiest test to see if it's a focusable widget
                             focused = true;
                             child.focus();
@@ -1149,10 +1164,10 @@ this.VKI_layout['\u4e2d\u6587\u6ce8\u97f3\u7b26\u53f7'] = {
             value = "";
         }
         value = value.toString();
-        if (this.targetNode.setSelectionRange && !this.targetNode.readOnly && !dojo.isIE) {
+        if (this.targetNode.setSelectionRange && !this.targetNode.readOnly && !has("ie")) {
             var rng = [this.targetNode.selectionStart, this.targetNode.selectionEnd];
             this.targetWidget.set("value", value.substr(0, rng[0]) + text + value.substr(rng[1]));
-            if (text == "\n" && dojo.isOpera) rng[0]++;
+            if (text == "\n" && has("opera")) rng[0]++;
             this.targetNode.setSelectionRange(rng[0] + text.length, rng[0] + text.length);
         } else if (this.targetNode.createTextRange && !this.targetNode.readOnly) {
             try {
@@ -1168,19 +1183,19 @@ this.VKI_layout['\u4e2d\u6587\u6ce8\u97f3\u7b26\u53f7'] = {
     },
 
     mouseOverHandler: function(event) {
-        dojo.toggleClass(event.target, "keyHover", true);
+        domClass.toggle(event.target, "keyHover", true);
     },
 
     mouseOutHandler: function(event) {
-        dojo.toggleClass(event.target, "keyHover", false);
+        domClass.toggle(event.target, "keyHover", false);
     },
 
     mouseDownHandler: function(event) {
-        dojo.toggleClass(event.target, "keyPressed", true);
+        domClass.toggle(event.target, "keyPressed", true);
     },
 
     mouseUpHandler: function(event) {
-        dojo.toggleClass(event.target, "keyPressed", false);
+        domClass.toggle(event.target, "keyPressed", false);
     }
 });
 });

@@ -1,6 +1,10 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/lang",
+    "dojo/topic",
+    "dojo/_base/array",
+    "dijit/registry",
     // Resources
     "dojo/text!citrix/common/templates/WizardNavigator.html",
     // Mixins
@@ -10,7 +14,7 @@ define([
     // Required in template
     "citrix/common/Button"
 ],
-function(dojo, declare, template, _widget, _templated, _citrixWidgetMixin) {
+function(dojo, declare, lang, topic, array, registry, template, _widget, _templated, _citrixWidgetMixin) {
 return declare("citrix.common.WizardNavigator", [_widget, _templated, _citrixWidgetMixin], {
 
     templateString: template,
@@ -44,17 +48,22 @@ return declare("citrix.common.WizardNavigator", [_widget, _templated, _citrixWid
 
     postCreate: function() {
         this.inherited(arguments);
-
-        this.subscribe(this.wizardId + "-startup", "_onStartup");
-        this.subscribe(this.wizardId + "-selectChild", "_onSelectChild");
-        this.subscribe(this.wizardId + "-removeChild", "_onRemoveChild");
-        this.subscribe(this.wizardId + "-addChild", "_onAddChild");
-        this.subscribe(this.wizardId + "-stateChange", "_onStateChange");
-        this.subscribe(this.wizardId + "-finish", "_onFinish");
+        this.wizardContainer = dijit.byId(this.wizardId);
+        var self = this;
+        
+        this.own(topic.subscribe(this.wizardId + "-startup", lang.hitch(this, "_onStartup")));
+        this.own(topic.subscribe(this.wizardId + "-removeChild", lang.hitch(this, "_onRemoveChild")));
+        this.own(topic.subscribe(this.wizardId + "-addChild", lang.hitch(this, "_onAddChild")));
+        this.own(topic.subscribe(this.wizardId + "-selectChild", lang.hitch(this,"_onSelectChild")));       
+        this.own(topic.subscribe(this.wizardId + "-stateChange", lang.hitch(this,"_onStateChange")));   
+        this.own(topic.subscribe(this.wizardId + "-finish", lang.hitch(this,"_onFinish")));
+        
+        array.forEach(this.wizardContainer.getDescendants(), function(target){
+            target.watch("state", function(name, oldval, newval){self._onStateChange(newval == "")})});
     },
 
     _onStartup: function(/*Object*/ info) {
-        this.wizardContainer = dijit.byId(this.wizardId);
+        this.wizardContainer = registry.byId(this.wizardId);
 
         this._numberPages = info.children.length;
         this._currentPage = info.selected;

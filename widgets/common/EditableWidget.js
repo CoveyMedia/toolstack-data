@@ -1,12 +1,17 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/array",
+    "dojo/_base/lang", 
+    "dojo/aspect", 
+    "dojo/dom-construct", 
+    "dojo/json",
     // Mixins
     "citrix/common/BoundWidget",
     "citrix/common/_CitrixWidgetMixin",
     "citrix/common/_EditableMixin"
 ],
-function(dojo, declare, boundWidget, _citrixWidgetMixin, _editableMixin) {
+function(dojo, declare, array, lang, aspect, construct, json, boundWidget, _citrixWidgetMixin, _editableMixin) {
 return declare("citrix.common.EditableWidget", [boundWidget, _citrixWidgetMixin, _editableMixin], {
 
     editor: "",
@@ -22,9 +27,9 @@ return declare("citrix.common.EditableWidget", [boundWidget, _citrixWidgetMixin,
     // when it will happen, _handleOnChange is what sets that timeout up.
 
     constructor: function(args) {
-        this._editorParams = args.editorParams ? dojo.fromJson(args.editorParams) : {};
+        this._editorParams = args.editorParams ? args.editorParams : {};
         function proxyEvent(/*Event*/ event){}
-        dojo.forEach(this._proxyEvents, function(event) {
+        array.forEach(this._proxyEvents, function(event) {
             this[event] = proxyEvent;
         }, this);
     },
@@ -114,14 +119,14 @@ return declare("citrix.common.EditableWidget", [boundWidget, _citrixWidgetMixin,
 
     _createWrapper: function() {
         if(!this.wrapperWidget) {
-            var placeholder = dojo.create("span", null, this.domNode, "before");
-            var editor = dojo.getObject(this.editor);
+            var placeholder = construct.create("span", null, this.domNode, "before");
+            var editor = lang.getObject(this.editor);
             var editorMap = this._getEditorMap();
             if (this._options) {
                 this._editorParams[editorMap.param] = this._options;
             } else if (this.map !== null) {
                 if (editorMap.param) {
-                    this._editorParams[editorMap.param] = dojo.map(this.map, function(item) {
+                    this._editorParams[editorMap.param] = array.map(this.map, function(item) {
                         var opt = {};
                         opt[editorMap.value] = item.value;
                         opt[editorMap.display] = item.display;
@@ -133,9 +138,10 @@ return declare("citrix.common.EditableWidget", [boundWidget, _citrixWidgetMixin,
             this._editorParams.tabIndex = this._wrapperTabIndex;
             this.wrapperWidget = new editor(this._editorParams, placeholder);
             // hookup any events
-            dojo.forEach(this._proxyEvents, function(event) {
+            array.forEach(this._proxyEvents, function(event) {
                 if (this.wrapperWidget[event]) {
-                    this.connect(this.wrapperWidget, event, event);
+                    //this.connect(this.wrapperWidget, event, event);
+                    this.own(aspect.after(this.wrapperWidget, event, lang.hitch(this, event), true));
                 }
             }, this);
             this.wrapperWidget.set("lastBoundValue", this.lastBoundValue);

@@ -1,13 +1,14 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/keys",
     // Mixins
     "dijit/_Widget",
     "dijit/_Templated",
     "dijit/_Contained",
     "dijit/_CssStateMixin"
 ],
-function(dojo, declare, _widget, _templated, _contained, _cssStateMixin) {
+function(dojo, declare, keys, _widget, _templated, _contained, _cssStateMixin) {
 return declare("citrix.xenclient._VMButton", [_widget, _templated, _contained, _cssStateMixin], {
 
     widgetsInTemplate: true,
@@ -50,7 +51,7 @@ return declare("citrix.xenclient._VMButton", [_widget, _templated, _contained, _
     },
 
     _onKeyPress: function(event){
-        if (event.keyCode == dojo.keys.SPACE || event.keyCode == dojo.keys.ENTER) {
+        if (event.keyCode == keys.SPACE || event.keyCode == keys.ENTER) {
             this.activate(event);
         }
     }

@@ -1,9 +1,9 @@
 <div>
-    <input type="radio" name="${id}_radio" bindIgnore="true" dojoType="citrix.common.RadioButton" value="true" dojoAttachPoint="onRadioNode" dojoAttachEvent="onChange: _onChildChange" />
-    <label dojoAttachPoint="onLabelNode">${onLabel}</label>
-    <span class="citrix" dojoAttachPoint="spinnerNode" dojoType="citrix.common.NumberSpinner" smallDelta="${smallDelta}" largeDelta="${largeDelta}" constraints="{min: 0, max: ${max}, places: 0}" value="${value}" dojoAttachEvent="onKeyUp: _onChildChange, _handleOnChange: _onChildChange"></span>
-    <span dojoAttachPoint="unitNode" dojoType="citrix.common.BoundWidget" map="[{value: 0, display: '${unitLabelPlural}'}, {value: 1, display: '${unitLabelSingular}'}, {value: 'n', display: '${unitLabelPlural}'}]"></span>
+    <input type="radio" name="${id}_radio" bindIgnore="true" data-dojo-type="citrix/common/RadioButton" value="true" data-dojo-attach-point="onRadioNode" data-dojo-attach-event="onChange: _onChildChange" />
+    <label data-dojo-attach-point="onLabelNode">${onLabel}</label>
+    <span class="citrix" data-dojo-attach-point="spinnerNode" data-dojo-type="citrix/common/NumberSpinner" smallDelta="${smallDelta}" largeDelta="${largeDelta}" constraints="{min: 0, max: ${max}, places: 0}" value="${value}" data-dojo-attach-event="onKeyUp: _onChildChange, _handleOnChange: _onChildChange"></span>
+    <span data-dojo-attach-point="unitNode" data-dojo-type="citrix/common/BoundWidget" map="[{value: 0, display: '${unitLabelPlural}'}, {value: 1, display: '${unitLabelSingular}'}, {value: 'n', display: '${unitLabelPlural}'}]"></span>
     <br />
-    <input type="radio" name="${id}_radio" bindIgnore="true" dojoType="citrix.common.RadioButton" value="false" dojoAttachPoint="offRadioNode" dojoAttachEvent="onChange: _onChildChange" />
-    <label dojoAttachPoint="offLabelNode">${offLabel}</label>
+    <input type="radio" name="${id}_radio" bindIgnore="true" data-dojo-type="citrix/common/RadioButton" value="false" data-dojo-attach-point="offRadioNode" data-dojo-attach-event="onChange: _onChildChange" />
+    <label data-dojo-attach-point="offLabelNode">${offLabel}</label>
 </div>

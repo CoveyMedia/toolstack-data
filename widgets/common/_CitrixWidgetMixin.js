@@ -1,8 +1,13 @@
 define([
     "dojo",
-    "dojo/_base/declare"
+    "dojo/_base/declare",
+    "dojo/_base/array",
+    "dojo/query",
+    "dojo/dom-class",
+    "dijit/registry",
+    "dojo/NodeList-dom",
 ],
-function(dojo, declare) {
+function(dojo, declare, array, query, domClass, registry) {
 return declare("citrix.common._CitrixWidgetMixin", null, {
 
     _setDisplay: function(item, display) {
@@ -18,7 +23,7 @@ return declare("citrix.common._CitrixWidgetMixin", null, {
         }
 
         if (typeof(item) == "string" && this.domNode) {
-            dojo.query(item, this.domNode).forEach(function(node) {
+            query(item, this.domNode).forEach(function(node) {
                 setDisplay(node, display);
             });
         } else {
@@ -39,7 +44,7 @@ return declare("citrix.common._CitrixWidgetMixin", null, {
         }
 
         if (typeof(item) == "string" && this.domNode) {
-            dojo.query(item, this.domNode).forEach(function(node) {
+            query(item, this.domNode).forEach(function(node) {
                 setVisible(node, visible);
             });
         } else {
@@ -57,8 +62,8 @@ return declare("citrix.common._CitrixWidgetMixin", null, {
         }
 
         if (typeof(item) == "string" && this.domNode) {
-            dojo.query(item, this.domNode).forEach(function(node) {
-                node = dijit.byNode(node);
+            query(item, this.domNode).forEach(function(node) {
+                node = registry.byNode(node);
                 if (node) {
                     setEnabled(node, enabled);
                 }
@@ -74,9 +79,9 @@ return declare("citrix.common._CitrixWidgetMixin", null, {
         }
 
         if (typeof(item) == "string" && this.domNode) {
-            dojo.query(item, this.domNode).toggleClass(cssClass, toggle);
+            query(item, this.domNode).toggleClass(cssClass, toggle);
         } else {
-            dojo.toggleClass(item, cssClass, toggle);
+            domClass.toggle(item, cssClass, toggle);
         }
     }
 });

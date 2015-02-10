@@ -1,12 +1,15 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/lang",
+    "dojo/dom-class",
+    "dojo/topic",
     // Resources
     "dojo/i18n!citrix/xenclient/nls/Menus",
     // Mixins
     "citrix/common/FooterBarItem"
 ],
-function(dojo, declare, nls, footerBarItem) {
+function(dojo, declare, lang, domClass, topic, nls, footerBarItem) {
 return declare("citrix.xenclient.BatteryFooterBarItem", [footerBarItem], {
 
     constructor: function(args) {
@@ -14,15 +17,17 @@ return declare("citrix.xenclient.BatteryFooterBarItem", [footerBarItem], {
     },
 
     postMixInProperties: function() {
-        dojo.mixin(this, nls);
+        lang.mixin(this, nls);
         this.inherited(arguments);
     },
 
     postCreate: function() {
         this.inherited(arguments);
-        dojo.toggleClass(this.focusNode, "citrixFooterBarItemRight");
+        domClass.toggle(this.focusNode, "citrixFooterBarItemRight");
         this._setDisplay(this.focusNode, false);
-        this.subscribe(this.battery.publish_topic, this._messageHandler);
+        this.own(
+            topic.subscribe(this.battery.publish_topic, lang.hitch(this, this._messageHandler))
+        );
         this._bindDijit();
     },
 

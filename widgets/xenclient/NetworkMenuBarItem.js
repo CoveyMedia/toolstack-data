@@ -1,6 +1,9 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/lang",
+    "dojo/dom-geometry",
+    "dojo/topic",
     // Resources
     "dojo/text!citrix/xenclient/templates/NetworkMenuBarItem.html",
     // Mixins
@@ -8,7 +11,7 @@ define([
     // Required in code
     "citrix/common/Tooltip"
 ],
-function(dojo, declare, template, menuBarItem, tooltip) {
+function(dojo, declare, lang, geometry, topic, template, menuBarItem, tooltip) {
 return declare("citrix.xenclient.NetworkMenuBarItem", [menuBarItem], {
 
     templateString: template,
@@ -23,14 +26,16 @@ return declare("citrix.xenclient.NetworkMenuBarItem", [menuBarItem], {
 
     postCreate: function() {
         this.tooltip = new tooltip({ connectId: this.focusNode, position: ["below"], showDelay: 200, baseClass: "citrixTooltip" });
-        this.subscribe(this.ndvm.publish_topic, this._messageHandler);
+        this.own(
+            topic.subscribe(this.ndvm.publish_topic, lang.hitch(this, this._messageHandler))
+        );
         this.inherited(arguments);
         this.startup();
         this._bindDijit();
     },
 
     onClick: function() {
-        var position = dojo.position(this.focusNode);
+        var position = geometry.position(this.focusNode);
         this.ndvm.popupNetworkMenu(position.x, position.y + position.h);
     },
 

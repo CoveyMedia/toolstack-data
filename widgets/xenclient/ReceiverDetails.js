@@ -1,6 +1,10 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/lang",
+    "dojo/_base/array",
+    "dojo/query",
+    "dojo/topic",
     // Resources
     "dojo/i18n!citrix/xenclient/nls/VMDetails",
     "dojo/i18n!citrix/xenclient/nls/VM",
@@ -26,7 +30,7 @@ define([
     "citrix/common/Button",
     "citrix/common/CheckBox"
 ],
-function(dojo, declare, vmDetailsNls, vmNls, template, dialog, _boundContainerMixin, _editableMixin, _citrixTooltipMixin, connectDevice) {
+function(dojo, declare, lang, array, query, topic, vmDetailsNls, vmNls, template, dialog, _boundContainerMixin, _editableMixin, _citrixTooltipMixin, connectDevice) {
 return declare("citrix.xenclient.ReceiverDetails", [dialog, _boundContainerMixin, _editableMixin, _citrixTooltipMixin], {
 
 	templateString: template,
@@ -39,17 +43,19 @@ return declare("citrix.xenclient.ReceiverDetails", [dialog, _boundContainerMixin
     },
 
     postMixInProperties: function() {
-        dojo.mixin(this, vmDetailsNls);
-        dojo.mixin(this, XenConstants);
+        lang.mixin(this, vmDetailsNls);
+        lang.mixin(this, XenConstants);
         this.inherited(arguments);
     },
 
     postCreate: function() {
         this.inherited(arguments);
         this.startup();
-        this.subscribe(XUtils.publishTopic, this._messageHandler);
-        this.subscribe(this.vm.publish_topic, this._messageHandler);
-        this.subscribe(XUICache.Host.publish_topic, this._messageHandler);
+        this.own(
+            topic.subscribe(XUtils.publishTopic, lang.hitch(this, this._messageHandler)),
+            topic.subscribe(this.vm.publish_topic, lang.hitch(this, this._messageHandler)),
+            topic.subscribe(XUICache.Host.publish_topic, lang.hitch(this, this._messageHandler))
+        );
         this._bindDijit();
         if (this.vm.policy_modify_vm) {
             this.edit();
@@ -136,7 +142,7 @@ return declare("citrix.xenclient.ReceiverDetails", [dialog, _boundContainerMixin
             });
         };
         if ([4, 5].contains(usb.state)) {
-            XUICache.messageBox.showConfirmation(this.USB_UNASSIGN, dojo.hitch(this, disconnect));
+            XUICache.messageBox.showConfirmation(this.USB_UNASSIGN, lang.hitch(this, disconnect));
         } else if (usb.state == 6) {
             // Device in use and VM is NOT running
             disconnect.call(this);
@@ -148,7 +154,7 @@ return declare("citrix.xenclient.ReceiverDetails", [dialog, _boundContainerMixin
     },
 
     _descendantAction: function(action) {
-        dojo.forEach(this.getDescendants(), function(widget){
+        array.forEach(this.getDescendants(), function(widget){
             if(widget[action] && typeof(widget[action]) == "function") {
                 widget[action]();
             }
@@ -157,7 +163,7 @@ return declare("citrix.xenclient.ReceiverDetails", [dialog, _boundContainerMixin
 
     _bindDijit: function() {
         this.bind(this.vm);
-        this.set("title", dojo.replace("{0} ({1})", [this.vm.truncatedName(45), this.vm.getTranslatedState(vmNls)]));
+        this.set("title", lang.replace("{0} ({1})", [this.vm.truncatedName(45), this.vm.getTranslatedState(vmNls)]));
         this._updateActions();
         this._updateMoreActions();
         this._updateButtons();
@@ -179,7 +185,7 @@ return declare("citrix.xenclient.ReceiverDetails", [dialog, _boundContainerMixin
                 }
             }
         }
-        dojo.forEach(actions, function(action) {
+        array.forEach(actions, function(action) {
             this._setDisplay(this[action + "Action"], allowedActions.contains(action));
             this._setEnabled(this[action + "Action"], !this.vm.powerClicked);
         }, this);
@@ -208,13 +214,13 @@ return declare("citrix.xenclient.ReceiverDetails", [dialog, _boundContainerMixin
 
     _updateSlotSelect: function() {
         var slotMap = {};
-        dojo.forEach(Object.keys(XUICache.VMs), function(key) {
+        array.forEach(Object.keys(XUICache.VMs), function(key) {
             var vm = XUICache.VMs[key];
             var name = (vm == this.vm) ? this.THIS_VM : vm.name.shorten(20);
             slotMap[vm.slot] = name;
         }, this);
 
-        var options = dojo.map(new Array(9), function(key, index) {
+        var options = array.map(new Array(9), function(key, index) {
             index += 1;
             var label = this.SWITCHER_KEY_MASK.format(index);
             if (slotMap[index]) {
@@ -232,7 +238,7 @@ return declare("citrix.xenclient.ReceiverDetails", [dialog, _boundContainerMixin
     },
 
     _getUsbID: function(node) {
-        return new dojo.NodeList(node).parents("tr").first()[0].getAttribute("deviceId");
+        return query(node).parents("tr").first()[0].getAttribute("deviceId");
     },
 
     _messageHandler: function(message) {

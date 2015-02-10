@@ -1,6 +1,7 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/lang",
     // Resources
     "dojo/i18n!citrix/xenclient/nls/Settings",
     "dojo/text!citrix/xenclient/templates/AudioNumberSpinner.html",
@@ -12,7 +13,7 @@ define([
     "citrix/common/NumberSpinner",
     "citrix/common/CheckBox"
 ],
-function(dojo, declare, settingsNls, template, _widget, _templated, _citrixWidget) {
+function(dojo, declare, lang, settingsNls, template, _widget, _templated, _citrixWidget) {
 return declare("citrix.xenclient.AudioNumberSpinner", [_widget, _templated, _citrixWidget], {
 
     templateString: template,
@@ -20,7 +21,7 @@ return declare("citrix.xenclient.AudioNumberSpinner", [_widget, _templated, _cit
     includeSwitch: false,
 
     postMixInProperties: function() {
-        dojo.mixin(this, settingsNls);
+        lang.mixin(this, settingsNls);
         this.inherited(arguments);
     },
 

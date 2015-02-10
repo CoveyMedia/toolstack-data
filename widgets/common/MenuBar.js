@@ -1,11 +1,14 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/lang",
     "dijit/popup",
+    "dojo/on",
+    "dojo/mouse",
     // Mixins
     "dijit/MenuBar"
 ],
-function(dojo, declare, dPopup, menuBar) {
+function(dojo, declare, lang, dPopup, on, mouse, menuBar) {
 return declare("citrix.common.MenuBar", [menuBar], {
 
     baseClass: "citrixMenuBar",
@@ -42,19 +45,19 @@ return declare("citrix.common.MenuBar", [menuBar], {
 				from_item._setSelected(true); // oops, _cleanUp() deselected the item
 				self.focusedChild = from_item;	// and unset focusedChild
 			},
-			onExecute: dojo.hitch(this, "_cleanUp")
+			onExecute: lang.hitch(this, "_cleanUp")
 		});
 
 		this.currentPopup = popup;
 		// detect mouseovers to handle lazy mouse movements that temporarily focus other menu items
-		popup.connect(popup.domNode, "onmouseenter", dojo.hitch(self, "_onPopupHover")); // cleaned up when the popped-up widget is destroyed on close
+		this.own(on(popup.domNode, mouse.enter, lang.hitch(this, "_onPopupHover"))); // cleaned up when the popped-up widget is destroyed on close
 
 		if(popup.focus){
 			// If user is opening the popup via keyboard (right arrow, or down arrow for MenuBar),
 			// if the cursor happens to collide with the popup, it will generate an onmouseover event
 			// even though the mouse wasn't moved.   Use a setTimeout() to call popup.focus so that
 			// our focus() call overrides the onmouseover event, rather than vice-versa.  (#8742)
-			popup._focus_timer = setTimeout(dojo.hitch(popup, function(){
+			popup._focus_timer = setTimeout(lang.hitch(popup, function(){
 				this._focus_timer = null;
 				this.focus();
 			}), 0);

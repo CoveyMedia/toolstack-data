@@ -1,6 +1,7 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/keys",
     // Resources
     "dojo/text!citrix/common/templates/asmSelectNode.html",
     // Mixins
@@ -8,7 +9,7 @@ define([
     "dijit/_Templated",
     "dijit/_CssStateMixin"
 ],
-function(dojo, declare, template, _widget, _templated, _cssStateMixin) {
+function(dojo, declare, keys, template, _widget, _templated, _cssStateMixin) {
 return declare("citrix.common.asmSelectNode", [_widget, _templated, _cssStateMixin], {
 
     item: {},
@@ -29,7 +30,7 @@ return declare("citrix.common.asmSelectNode", [_widget, _templated, _cssStateMix
     },
 
     _onKeyPress: function(event) {
-        if(event.keyCode == dojo.keys.SPACE) {
+        if(event.keyCode == keys.SPACE) {
             this.deleteNode(this.id);
         }
     },

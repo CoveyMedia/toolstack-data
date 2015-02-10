@@ -1,15 +1,20 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/lang",
+    "dojo/_base/event",
+    "dojo/keys",
+    "dojo/string",
     // Resources
     "dojo/text!citrix/common/templates/Dialog.html",
     // Mixins
+    "dijit/_Widget",
     "dijit/Dialog",
     "dijit/_WidgetsInTemplateMixin",
     "citrix/common/_CitrixWidgetMixin",
     "dijit/form/_FormMixin"
 ],
-function(dojo, declare, template, dialog, _widgetsInTemplate, _citrixWidgetMixin, _formMixin) {
+function(dojo, declare, lang, event, keys, string, template, _Widget, dialog, _widgetsInTemplate, _citrixWidgetMixin, _formMixin) {
 return declare("citrix.common.Dialog", [dialog, _widgetsInTemplate, _citrixWidgetMixin], {
 
     templateString: template,
@@ -20,23 +25,23 @@ return declare("citrix.common.Dialog", [dialog, _widgetsInTemplate, _citrixWidge
     destroyOnHide: false,
     needsValidation: false,
 
-    attributeMap: dojo.delegate(dijit._Widget.prototype.attributeMap, {
+    attributeMap: lang.delegate(_Widget.prototype.attributeMap, {
         title: [{ node: "titleNode", type: "innerHTML" }],
         "aria-describedby":""
     }),
 
     postMixInProperties: function() {
         if (this.needsValidation) {
-            dojo.mixin(this, _formMixin);
+            lang.mixin(this, _formMixin);
         }
         this.inherited(arguments);
     },
 
     postCreate: function() {
         this.inherited(arguments);
-        this.watch("canCancel", function(propName, oldVal, newVal) {
+        this.own(this.watch("canCancel", function(propName, oldVal, newVal) {
             this._setDisplay(this.closeButtonNode, newVal);
-        });
+        }));
         this._setDisplay(this.closeButtonNode, this.canCancel);
     },
 
@@ -54,7 +59,7 @@ return declare("citrix.common.Dialog", [dialog, _widgetsInTemplate, _citrixWidge
         // e.g. found this would happen with MediaWizard on cancelling, about 1 in 30 times
         var deferred = this.inherited(arguments);
         if(deferred) {
-            return deferred.then(dojo.hitch(this, this.afterHide));
+            return deferred.then(lang.hitch(this, this.afterHide));
         }
         this.afterHide();
     },
@@ -77,13 +82,13 @@ return declare("citrix.common.Dialog", [dialog, _widgetsInTemplate, _citrixWidge
     },
 
     _onKey: function(evt) {
-        if(evt.charOrCode == dojo.keys.ENTER && this.canExecute
+        if(evt.charOrCode == keys.ENTER && this.canExecute
             && evt.srcElement && evt.srcElement.type != "textarea") {
             this.onFinish();
-            dojo.stopEvent(evt);
+            event.stop(evt);
             return;
-        } else if(evt.charOrCode == dojo.keys.ESCAPE && !this.canCancel) {
-            dojo.stopEvent(evt);
+        } else if(evt.charOrCode == keys.ESCAPE && !this.canCancel) {
+            event.stop(evt);
             return;
         }
         this.inherited(arguments);
@@ -97,8 +102,8 @@ return declare("citrix.common.Dialog", [dialog, _widgetsInTemplate, _citrixWidge
         var className = this.declaredClass, _this = this;
         // Cache contains a string because we need to do property replacement
         // do the property replacement
-        return dojo.string.substitute(tmpl, this, function(value, key){
-            if(key.charAt(0) == '!'){ value = dojo.getObject(key.substr(1), false, _this); }
+        return string.substitute(tmpl, this, function(value, key){
+            if(key.charAt(0) == '!'){ value = lang.getObject(key.substr(1), false, _this); }
             if(typeof value == "undefined"){ throw new Error(className+" template:"+key); } // a debugging aide
             if(value == null){ return ""; }
 

@@ -1,6 +1,8 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/lang",
+    "dojo/topic",
     // Resources
     "dojo/i18n!citrix/xenclient/nls/VM",
     "dojo/text!citrix/xenclient/templates/VMPower.html",
@@ -17,7 +19,7 @@ define([
     "citrix/common/BoundWidget",
     "citrix/common/ImageButton"
 ],
-function(dojo, declare, vmNls, template, _widget, _templated, _contained, _cssStateMixin, _formMixin, _citrixWidgetMixin, _BoundContainerMixin, _citrixTooltipMixin) {
+function(dojo, declare, lang, topic, vmNls, template, _widget, _templated, _contained, _cssStateMixin, _formMixin, _citrixWidgetMixin, _BoundContainerMixin, _citrixTooltipMixin) {
 return declare("citrix.xenclient.VMPower", [_widget, _templated, _contained, _cssStateMixin, _formMixin, _citrixWidgetMixin, _BoundContainerMixin, _citrixTooltipMixin], {
 
 	templateString: template,
@@ -28,13 +30,15 @@ return declare("citrix.xenclient.VMPower", [_widget, _templated, _contained, _cs
     },
 
     postMixInProperties: function() {
-        dojo.mixin(this, vmNls);
+        lang.mixin(this, vmNls);
         this.inherited(arguments);
     },
 
     postCreate: function() {
-        this.subscribe(this.vm.publish_topic, this._messageHandler);
-        this.subscribe(XUICache.Host.publish_topic, this._messageHandler);
+        this.own(
+            topic.subscribe(this.vm.publish_topic, lang.hitch(this, this._messageHandler)),
+            topic.subscribe(XUICache.Host.publish_topic, lang.hitch(this, this._messageHandler))
+        );
         this._bindDijit();
         this.inherited(arguments);
     },

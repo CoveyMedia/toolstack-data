@@ -1,20 +1,20 @@
-<div class="citrixDialog alertDialog" dojoAttachPoint="containerNode" tabindex="-1" waiRole="dialog" waiState="labelledby-${id}_title">
+<div class="citrixDialog alertDialog" data-dojo-attach-point="containerNode" tabindex="-1" waiRole="dialog" waiState="labelledby-${id}_title">
 	<div class="citrixDialogTitleBar">
-        <span dojoAttachPoint="titleNode" class="citrixDialogTitle" id="${id}_title"></span>
-        <span dojoAttachPoint="closeButtonNode" class="citrixDialogCloseIcon" dojoAttachEvent="onclick: onCancel">
-            <span dojoAttachPoint="closeText"></span>
+        <span data-dojo-attach-point="titleNode" class="citrixDialogTitle" id="${id}_title"></span>
+        <span data-dojo-attach-point="closeButtonNode" class="citrixDialogCloseIcon" data-dojo-attach-event="onclick: onCancel">
+            <span data-dojo-attach-point="closeText"></span>
         </span>
 	</div>
     <div class="citrixDialogPaneContent">
-        <div dojoAttachPoint="iconNode"></div>
-        <div class="alertMessage" dojoAttachPoint="messageNode"></div>
+        <div data-dojo-attach-point="iconNode"></div>
+        <div class="alertMessage" data-dojo-attach-point="messageNode"></div>
     </div>
-    <div dojoAttachPoint="footerNode" class="citrixDialogFooterContent">
-        <input id="notAgain" class="notAgain notAgainCheckbox" type="checkbox" dojoType="citrix.common.CheckBox" dojoAttachPoint="notAgainNode"/>
+    <div data-dojo-attach-point="footerNode" class="citrixDialogFooterContent">
+        <input id="notAgain" class="notAgain notAgainCheckbox" type="checkbox" data-dojo-type="citrix.common.CheckBox" data-dojo-attach-point="notAgainNode"/>
         <label for="notAgain" class="notAgain">${DO_NOT_SHOW_AGAIN}</label>
         <span class="citrixDialogFooter right">
-            <button dojoAttachPoint="continueButton" dojoType="citrix.common.Button" class="citrixDialogItemRight" dojoAttachEvent="onClick: onExecute"></button>
-            <button dojoAttachPoint="closeButton" dojoType="citrix.common.Button" class="citrixDialogItemRight" dojoAttachEvent="onClick: onCancel"></button>
+            <button data-dojo-attach-point="continueButton" data-dojo-type="citrix.common.Button" class="citrixDialogItemRight" data-dojo-attach-event="onClick: onExecute"></button>
+            <button data-dojo-attach-point="closeButton" data-dojo-type="citrix.common.Button" class="citrixDialogItemRight" data-dojo-attach-event="onClick: onCancel"></button>
         </span>
     </div>
 </div>

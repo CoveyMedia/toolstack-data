@@ -1,6 +1,10 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/lang",
+    "dojo/topic",
+    "dojo/cookie",
+    "dijit/registry",
     // Resources
     "dojo/text!citrix/common/templates/WizardContainer.html",
     // Mixins
@@ -10,7 +14,7 @@ define([
     // Required in code
     "citrix/common/WizardSteps"
 ],
-function(dojo, declare, template, _templated, stackContainer, _citrixWidgetMixin, wizardSteps) {
+function(dojo, declare, lang, topic, cookie, registry, template, _templated, stackContainer, _citrixWidgetMixin, wizardSteps) {
 return declare("citrix.common.WizardContainer", [stackContainer, _templated, _citrixWidgetMixin], {
 
     templateString: template,
@@ -43,7 +47,7 @@ return declare("citrix.common.WizardContainer", [stackContainer, _templated, _ci
         this.inherited(arguments);
 
         if(this.selectedChildWidget) {
-            dojo.publish(this.id + "-stateChange", [(this.selectedChildWidget.get("state") == "")]);
+            topic.publish(this.id + "-stateChange", (this.selectedChildWidget.get("state") == ""));
         }
     },
 
@@ -61,7 +65,7 @@ return declare("citrix.common.WizardContainer", [stackContainer, _templated, _ci
         // page:
         //		Reference to child widget or id of child widget
 
-        page = dijit.byId(page);
+        page = registry.byId(page);
 
         if(this.selectedChildWidget != page){
             // Deselect old page and select new one
@@ -69,12 +73,12 @@ return declare("citrix.common.WizardContainer", [stackContainer, _templated, _ci
             this._set("selectedChildWidget", page);
             var prevSibling = page.getPreviousSibling();
             var returnable = prevSibling != null && prevSibling.get("isReturnable");
-            dojo.publish(this.id + "-selectChild", [page, returnable]);
+            topic.publish(this.id + "-selectChild", page, returnable);
 
-            dojo.publish(this.id + "-stateChange", [(page.get("state") == "")]);
+            topic.publish(this.id + "-stateChange", (page.get("state") == ""));
 
             if(this.persist){
-                dojo.cookie(this.id + "_selectedChild", this.selectedChildWidget.id);
+                cookie(this.id + "_selectedChild", this.selectedChildWidget.id);
             }
         }
 
@@ -91,7 +95,7 @@ return declare("citrix.common.WizardContainer", [stackContainer, _templated, _ci
         if(this.selectedChildWidget.validate()) {
             var nextFunction = this.selectedChildWidget.isLastChild ? this.finish : this.forward;
             if(this.selectedChildWidget.onNextFunction) {
-                this.selectedChildWidget.onNextFunction(dojo.hitch(this, nextFunction));
+                this.selectedChildWidget.onNextFunction(lang.hitch(this, nextFunction));
             }
             else {
                 nextFunction();
@@ -107,11 +111,11 @@ return declare("citrix.common.WizardContainer", [stackContainer, _templated, _ci
 	},
 
     cancel: function() {
-        dojo.publish(this.id + "-cancel");
+        topic.publish(this.id + "-cancel");
     },
 
     finish: function() {
-        dojo.publish(this.id + "-finish");
+        topic.publish(this.id + "-finish");
     }
 });
 });

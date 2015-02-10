@@ -1,12 +1,13 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/topic",
     "dijit",
     // Mixins
     "dijit/form/_FormMixin",
     "citrix/common/ContentPane"
 ],
-function(dojo, declare, dijit, _formMixin, contentPane) {
+function(dojo, declare, topic, dijit, _formMixin, contentPane) {
 return declare("citrix.common.WizardPage", [contentPane, _formMixin], {
 
     isReturnable: true,
@@ -17,16 +18,17 @@ return declare("citrix.common.WizardPage", [contentPane, _formMixin], {
     postCreate: function() {
         this.inherited(arguments);
 
-        this.watch("selected", function(prop, oldVal, newVal) {
+        this.own(this.watch("selected", function(prop, oldVal, newVal) {
             if(newVal && !this._wasShown && this.onStartFunction) {
                 this.onStartFunction();
             }
-        });
+        }));
     },
 
     _setStateAttr: function(value) {
         this.state = value;
-        dojo.publish(this.getParent().id + "-stateChange", [(value == "")]);
+        
+        topic.publish(this.getParent().id + "-stateChange", (value == ""));
     },
 
     onShow: function() {

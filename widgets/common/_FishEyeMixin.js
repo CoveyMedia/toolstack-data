@@ -1,8 +1,12 @@
 define([
     "dojo",
-    "dojo/_base/declare"
+    "dojo/_base/declare",
+    "dojo/_base/lang",
+    "dojo/dom-class",
+    "dojo/dom-geometry",
+    "dojo/on"
 ],
-function(dojo, declare) {
+function(dojo, declare, lang, domClass, geometry, on) {
 return declare("citrix.common._FishEyeMixin", null, {
 
     mouseContainer: window,
@@ -17,8 +21,8 @@ return declare("citrix.common._FishEyeMixin", null, {
 
     postCreate: function() {
         this._scaler = (this.maxScale - this.minScale) / (this.outerField - this.innerField);
-        dojo.addClass(this.containerNode, this.fishClass);
-        this.connect(this.mouseContainer, "mousemove", this._mouseMove);
+        domClass.add(this.containerNode, this.fishClass);
+        this.own(on(this.mouseContainer, "mousemove", lang.hitch(this, this._mouseMove)));
         this.inherited(arguments);
     },
 
@@ -27,7 +31,7 @@ return declare("citrix.common._FishEyeMixin", null, {
             this._scaleImage(this.minScale);
             return;
         }
-        var coords = dojo.coords(this[this.nodeName]);
+        var coords = geometry.position(this[this.nodeName]);
         this._imageCentreX = coords.x + (this[this.nodeName].width / 2);
         this._imageCentreY = coords.y + (this[this.nodeName].height / 2);
         var dist_x = (this._imageCentreX - event.x);

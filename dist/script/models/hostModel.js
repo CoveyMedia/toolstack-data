@@ -340,7 +340,6 @@ XenClient.UI.HostModel = function() {
     this.taasUpload = interfaces.diag.taas_upload;
     this.assignCD = interfaces.host.assign_cd_device;
     this.ejectCD = interfaces.host.eject_cd_device;
-
     this.load_pluginSubDirs = function() {
         var finish = function() {
             self.publish("changed");

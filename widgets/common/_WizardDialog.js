@@ -1,12 +1,17 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/lang",
+    "dojo/_base/event",
+    "dojo/topic",
+    "dojo/keys",
+    "dijit/registry",
     // Mixins
     "citrix/common/Dialog",
     "citrix/common/_BoundContainerMixin",
     "citrix/common/_CitrixTooltipMixin"
 ],
-function(dojo, declare, dialog, _boundContainerMixin, _citrixTooltipMixin) {
+function(dojo, declare, lang, event, topic, keys, registry, dialog, _boundContainerMixin, _citrixTooltipMixin) {
 return declare("citrix.common._WizardDialog", [dialog, _boundContainerMixin, _citrixTooltipMixin], {
 
     //templateString: should be set in any children
@@ -18,9 +23,8 @@ return declare("citrix.common._WizardDialog", [dialog, _boundContainerMixin, _ci
 
     postCreate: function() {
         this.inherited(arguments);
-
-        this.subscribe(this.wizardId + "-cancel", "onCancel");
-        this.subscribe(this.wizardId + "-finish", "onExecute");
+        this.own(topic.subscribe(this.wizardId + "-cancel", lang.hitch(this, "onCancel")));
+        this.own(topic.subscribe(this.wizardId + "-finish", lang.hitch(this, "onExecute")));
     },
 
     afterHide: function() {
@@ -29,20 +33,20 @@ return declare("citrix.common._WizardDialog", [dialog, _boundContainerMixin, _ci
     },
 
     onProgress: function() {
-        var widget = dijit.byId(this.wizardId);
+        var widget = registry.byId(this.wizardId);
         if(widget && widget.progress) {
             widget.progress();
         }
     },
 
     _onKey: function(evt) {
-        if(evt.charOrCode == dojo.keys.ENTER && this.canExecute
+        if(evt.charOrCode == keys.ENTER && this.canExecute
             && evt.srcElement && evt.srcElement.type != "textarea") {
             this.onProgress();
-            dojo.stopEvent(evt);
+            event.stop(evt);
             return;
-        } else if(evt.charOrCode == dojo.keys.ESCAPE && !this.canCancel) {
-            dojo.stopEvent(evt);
+        } else if(evt.charOrCode == keys.ESCAPE && !this.canCancel) {
+            event.stop(evt);
             return;
         }
         this.inherited(arguments);

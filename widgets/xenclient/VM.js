@@ -1,6 +1,11 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/lang",
+    "dojo/_base/array",
+    "dojo/dom-attr",
+    "dojo/dom-class", 
+    "dojo/topic",
     // Resources
     "dojo/i18n!citrix/xenclient/nls/VM",
     "dojo/text!citrix/xenclient/templates/VM.html",
@@ -19,7 +24,7 @@ define([
     "citrix/common/ImageButton",
     "citrix/common/ProgressBar"
 ],
-function(dojo, declare, vmNls, template, _vmButton, _formMixin, _citrixWidgetMixin, _boundContainerMixin, _citrixTooltipMixin, vmDetails, receiverDetails, tooltip) {
+function(dojo, declare, lang, array, domAttr, domClass, topic, vmNls, template, _vmButton, _formMixin, _citrixWidgetMixin, _boundContainerMixin, _citrixTooltipMixin, vmDetails, receiverDetails, tooltip) {
 return declare("citrix.xenclient.VM", [_vmButton, _formMixin, _citrixWidgetMixin, _boundContainerMixin, _citrixTooltipMixin], {
 
 	templateString: template,
@@ -30,15 +35,17 @@ return declare("citrix.xenclient.VM", [_vmButton, _formMixin, _citrixWidgetMixin
     },
 
     postMixInProperties: function() {
-        dojo.mixin(this, vmNls);
+        lang.mixin(this, vmNls);
         this.inherited(arguments);
     },
 
     postCreate: function() {
         this.tooltip = new tooltip({ connectId: this.warningNode, position: ["above"], showDelay: 200 });
-        this.subscribe(XUtils.publishTopic, this._messageHandler);
-        this.subscribe(this.vm.publish_topic, this._messageHandler);
-        this.subscribe(XUICache.Host.publish_topic, this._messageHandler);
+        this.own(
+            topic.subscribe(XUtils.publishTopic, lang.hitch(this, this._messageHandler)),
+            topic.subscribe(this.vm.publish_topic, lang.hitch(this, this._messageHandler)),
+            topic.subscribe(XUICache.Host.publish_topic, lang.hitch(this, this._messageHandler))
+        );
         this._bindDijit();
         this.inherited(arguments);
     },
@@ -58,7 +65,7 @@ return declare("citrix.xenclient.VM", [_vmButton, _formMixin, _citrixWidgetMixin
         if(this.vm.get_virtualDisks().length > 0) {
             this._vmAction(action);
         } else {
-            XUICache.messageBox.showConfirmation(this.START_VM_NO_DISKS.format(this.vm.name), dojo.hitch(this, function() {
+            XUICache.messageBox.showConfirmation(this.START_VM_NO_DISKS.format(this.vm.name), lang.hitch(this, function() {
                 this._vmAction(action);
             }), {
                 headerText: this.START_VM_NO_DISKS_HEADER,
@@ -114,7 +121,7 @@ return declare("citrix.xenclient.VM", [_vmButton, _formMixin, _citrixWidgetMixin
         this._updateWarning();
         this._updateProgress();
         this._updateState();
-        dojo.attr(this.warningNode, "tabindex", 0);
+        domAttr.set(this.warningNode, "tabindex", 0);
         this.inherited(arguments);
     },
 
@@ -133,7 +140,7 @@ return declare("citrix.xenclient.VM", [_vmButton, _formMixin, _citrixWidgetMixin
                 }
             }
         }
-        dojo.forEach(actions, function(action) {
+        array.forEach(actions, function(action) {
             this._setDisplay("." + action + "Action", allowedActions.contains(action));
             this._setEnabled("." + action + "Action", !this.vm.powerClicked);
         }, this);
@@ -191,7 +198,7 @@ return declare("citrix.xenclient.VM", [_vmButton, _formMixin, _citrixWidgetMixin
                 break;
             }
         }
-        dojo.replaceClass(this.stateIcon.domNode, stateClass, "stateIconOn stateIconOff stateIconPaused");
+        domClass.replace(this.stateIcon.domNode, stateClass, "stateIconOn stateIconOff stateIconPaused");
     },
 
     _vmAction: function(action) {

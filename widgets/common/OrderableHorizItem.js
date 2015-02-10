@@ -1,6 +1,8 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/dom-attr",
+    "dojo/keys",
     // Resources
     "dojo/text!citrix/common/templates/OrderableHorizItem.html",
     // Mixins
@@ -10,7 +12,7 @@ define([
     "dijit/_CssStateMixin",
     "citrix/common/_CitrixTooltipMixin"
 ],
-function(dojo, declare, template, _widget, _templated, _contained, _cssStateMixin, _citrixTooltipMixin) {
+function(dojo, declare, attr, keys, template, _widget, _templated, _contained, _cssStateMixin, _citrixTooltipMixin) {
 return declare("citrix.common.OrderableHorizItem", [_widget, _templated, _contained, _cssStateMixin, _citrixTooltipMixin], {
 
 	templateString: template,
@@ -26,18 +28,18 @@ return declare("citrix.common.OrderableHorizItem", [_widget, _templated, _contai
     postCreate: function() {
         this.inherited(arguments);
         this.infoNode.innerHTML = this._truncatedInfo();
-        dojo.attr(this.infoNode, "title", this._fullInfoWhenTruncated());
+        attr.set(this.infoNode, "title", this._fullInfoWhenTruncated());
         this._bindDijit();
     },
 
     _onDecreaseClick: function(event) {
-        if(event.type == "click" || (event.type == "keypress" && event.keyCode == dojo.keys.SPACE)) {
+        if(event.type == "click" || (event.type == "keypress" && event.keyCode == keys.SPACE)) {
             this.getParent()._moveChildren(this, -1, this.decreaseButton);
         }
     },
 
     _onIncreaseClick: function(event) {
-        if(event.type == "click" || (event.type == "keypress" && event.keyCode == dojo.keys.SPACE)) {
+        if(event.type == "click" || (event.type == "keypress" && event.keyCode == keys.SPACE)) {
             this.getParent()._moveChildren(this, +1, this.increaseButton);
         }
     },

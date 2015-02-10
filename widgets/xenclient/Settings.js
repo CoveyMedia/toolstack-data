@@ -1,7 +1,12 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/lang",
+    "dojo/_base/array",
     "dojo/dom-construct",
+    "dojo/on",
+    "dijit/registry",
+    "dojo/topic",
     // Resources
     "dojo/i18n!citrix/xenclient/nls/Settings",
     "dojo/text!citrix/xenclient/templates/Settings.html",
@@ -28,7 +33,7 @@ define([
     "citrix/common/Label",
     "citrix/common/Timeout"
 ],
-function(dojo, declare, domConstruct, settingsNls, template, dialog, _boundContainerMixin, _citrixTooltipMixin, itemFileReadStore, boundWidget, select, audioSelect, audioSpinner) {
+function(dojo, declare, lang, array, domConstruct, on, registry, topic, settingsNls, template, dialog, _boundContainerMixin, _citrixTooltipMixin, itemFileReadStore, boundWidget, select, audioSelect, audioSpinner) {
 return declare("citrix.xenclient.Settings", [dialog, _boundContainerMixin, _citrixTooltipMixin], {
 
 	templateString: template,
@@ -40,7 +45,7 @@ return declare("citrix.xenclient.Settings", [dialog, _boundContainerMixin, _citr
     },
 
     postMixInProperties: function() {
-        dojo.mixin(this, settingsNls);
+        lang.mixin(this, settingsNls);
         this.inherited(arguments);
     },
 
@@ -48,11 +53,13 @@ return declare("citrix.xenclient.Settings", [dialog, _boundContainerMixin, _citr
         this.inherited(arguments);
         this.startup();
         this.tabContainer.closeChild(this.vmModeContainer); // XC-8538 temporarily hide native experience
-        this.connect(this.tabContainer.tablist, "onSelectChild", "_onTabChange");
-        this.subscribe(XUICache.Host.publish_topic, this._messageHandler);
-        this.subscribe(XUICache.Update.publish_topic, this._messageHandler);
-        this.subscribe(XUtils.publishTopic, this._messageHandler);
-        this.subscribe("com.citrix.xenclient.xenmgr", this._messageHandler);
+        this.own(
+            on(this.tabContainer.tablist, "onSelectChild", lang.hitch(this, "_onTabChange")),
+            topic.subscribe(XUICache.Host.publish_topic, lang.hitch(this, this._messageHandler)),
+            topic.subscribe(XUICache.Update.publish_topic, lang.hitch(this, this._messageHandler)),
+            topic.subscribe(XUtils.publishTopic, lang.hitch(this, this._messageHandler)),
+            topic.subscribe("com.citrix.xenclient.xenmgr", lang.hitch(this, this._messageHandler))
+        );
         this._createAudioFields();
         this._bindDijit();
     },
@@ -66,11 +73,11 @@ return declare("citrix.xenclient.Settings", [dialog, _boundContainerMixin, _citr
     save: function() {
         var values = this.unbind();
 
-        this.saveValues(this.host, values, dojo.hitch(this, function() {
+        this.saveValues(this.host, values, lang.hitch(this, function() {
 
             this.host.refresh();
             
-            var anyGuestOn = dojo.some(Object.keys(XUICache.VMs), function(key) {
+            var anyGuestOn = array.some(Object.keys(XUICache.VMs), function(key) {
                 var vm = XUICache.VMs[key];
                 return vm.isActive();
             }, this);
@@ -124,7 +131,7 @@ return declare("citrix.xenclient.Settings", [dialog, _boundContainerMixin, _citr
                 XUtils.publish(XenConstants.TopicTypes.UI_HIDE_WAIT);
             }, error)
         };
-        XUICache.Update.checkUpdate(url, dojo.hitch(this, function(version, release, state) {
+        XUICache.Update.checkUpdate(url, lang.hitch(this, function(version, release, state) {
             XUtils.publish(XenConstants.TopicTypes.UI_HIDE_WAIT);
             switch(state) {
                 case XenConstants.UpdateVersionStates.CANNOT_UPGRADE: {
@@ -172,7 +179,7 @@ return declare("citrix.xenclient.Settings", [dialog, _boundContainerMixin, _citr
     },
 
     _updateMaps: function() {
-        var keyboardMap = dojo.map(this.host.keyboard_layouts, function(layout) {
+        var keyboardMap = array.map(this.host.keyboard_layouts, function(layout) {
             var opt = {};
             opt["value"] = layout;
             opt["label"] = this["KEYBOARD_LAYOUT_" + layout.toUpperCase().replace(/-/g, "_")];
@@ -181,7 +188,7 @@ return declare("citrix.xenclient.Settings", [dialog, _boundContainerMixin, _citr
 
         this.keyboardNode.set("options", keyboardMap);
 
-        var captureMap = dojo.map(this.host.available_capture_devices, function(device) {
+        var captureMap = array.map(this.host.available_capture_devices, function(device) {
             var opt = {};
             opt["value"] = device.id;
             opt["label"] = device.name;
@@ -190,7 +197,7 @@ return declare("citrix.xenclient.Settings", [dialog, _boundContainerMixin, _citr
 
         this.captureNode.set("options", captureMap);
 
-        var playbackMap = dojo.map(this.host.available_playback_devices, function(device) {
+        var playbackMap = array.map(this.host.available_playback_devices, function(device) {
             var opt = {};
             opt["value"] = device.id;
             opt["label"] = device.name;
@@ -226,7 +233,7 @@ return declare("citrix.xenclient.Settings", [dialog, _boundContainerMixin, _citr
     },
 
     _onNativeRadioChange: function() {
-        var singleRadio = dijit.byId("singleVMMode");
+        var singleRadio = registry.byId("singleVMMode");
         this._setEnabled(this.nativeVMNode, singleRadio.checked);
     },
 
@@ -299,7 +306,7 @@ return declare("citrix.xenclient.Settings", [dialog, _boundContainerMixin, _citr
     _updateLanguages: function() {
         this._setDisplay(this.languageTab.controlButton, this.host.supported_languages.length > 1);
 
-        var languageMap = dojo.map(this.host.supported_languages, function(language) {
+        var languageMap = array.map(this.host.supported_languages, function(language) {
             var opt = {};
             opt["value"] = language;
             opt["label"] = this["LANGUAGE_" + language.substring(3).toUpperCase()];
@@ -313,14 +320,14 @@ return declare("citrix.xenclient.Settings", [dialog, _boundContainerMixin, _citr
 
         var createFields = function(items, request) {
 
-            dojo.forEach(this.audioWidgets, function(widget) {
+            array.forEach(this.audioWidgets, function(widget) {
                 widget.destroyRecursive();
             });
 
             this.audioWidgets = [];
-            dojo.empty(this.audioFieldsWrap);
+            domConstruct.empty(this.audioFieldsWrap);
 
-            dojo.forEach(items, function(item, i) {
+            array.forEach(items, function(item, i) {
                 var typeString = store.getValue(item, "type").toUpperCase();
                 var labelMask = this["AUDIO_MASK_" + typeString];
                 var wrap = domConstruct.create("div", { className: "citrixTabPaneField" }, this.audioFieldsWrap);
@@ -351,12 +358,12 @@ return declare("citrix.xenclient.Settings", [dialog, _boundContainerMixin, _citr
             this._setupSave(this.audioWidgets);
         };
 
-        var items = Object.values(dojo.clone(this.host.audioControls));
+        var items = Object.values(lang.clone(this.host.audioControls));
 
         var store = new itemFileReadStore({ data: { identifier: "id", items: items }, clearOnClose: true });
 
         store.fetch({
-            onComplete: dojo.hitch(this, createFields),
+            onComplete: lang.hitch(this, createFields),
             sort: [{ attribute: "name" }]
         });
 

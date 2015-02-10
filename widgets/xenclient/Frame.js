@@ -1,6 +1,14 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/lang",
+    "dojo/_base/window",
+    "dojo/_base/fx",
+    "dojo/dom-attr",
+    "dojo/dom-construct",
+    "dojo/dom-style",
+    "dojo/on",
+    "dojo/topic",
     // Resources
     "dojo/i18n!citrix/xenclient/nls/Frame",
     "dojo/i18n!citrix/xenclient/nls/Alerts",
@@ -13,7 +21,7 @@ define([
     "citrix/common/ContentPane",
     "citrix/common/Button"
 ],
-function(dojo, declare, frameNls, alertsNls, template, borderContainer, _templated, _citrixWidgetMixin) {
+function(dojo, declare, lang, window, fx, domAttr, domConstruct, domStyle, on, topic, frameNls, alertsNls, template, borderContainer, _templated, _citrixWidgetMixin) {
 return declare("citrix.xenclient.Frame", [borderContainer, _templated, _citrixWidgetMixin], {
 
     templateString: template,
@@ -28,19 +36,21 @@ return declare("citrix.xenclient.Frame", [borderContainer, _templated, _citrixWi
     _keyString: "",
 
     postMixInProperties: function() {
-        dojo.mixin(this, frameNls);
+        lang.mixin(this, frameNls);
         this.inherited(arguments);
     },
 
     postCreate: function() {
         this.inherited(arguments);
-        this.subscribe(XUtils.publishTopic, this._messageHandler);
-        this.subscribe(XUICache.Host.publish_topic, this._messageHandler);
-        this.subscribe("com.citrix.xenclient.updatemgr", this._messageHandler);
-        this.connect(dojo.doc.body, "mousemove", this._onMouseMove);
-        this.connect(dojo.doc, "keydown", this._onKeyDown);
-        this.connect(dojo.doc, "keyup", this._onKeyUp);
-        this.connect(dojo.doc, "onblur", this._onBlur);
+        this.own(
+            topic.subscribe(XUtils.publishTopic, lang.hitch(this, this._messageHandler)),
+            topic.subscribe(XUICache.Host.publish_topic, lang.hitch(this, this._messageHandler)),
+            topic.subscribe("com.citrix.xenclient.updatemgr", lang.hitch(this, this._messageHandler)),
+            on(window.doc.body, "mousemove", this._onMouseMove),
+            on(window.doc, "keydown", this._onKeyDown),
+            on(window.doc, "keyup", this._onKeyUp),
+            on(window.doc, "onblur", this._onBlur)
+        );
     },
 
     layout: function() {
@@ -49,7 +59,7 @@ return declare("citrix.xenclient.Frame", [borderContainer, _templated, _citrixWi
     },
 
     showWait: function(noFade) {
-        this._waitTimer = setTimeout(dojo.hitch(this, this.hideWait, noFade), this.waitTimeout);
+        this._waitTimer = setTimeout(lang.hitch(this, this.hideWait, noFade), this.waitTimeout);
 
         if (this._waitVisible) {
             return;
@@ -76,10 +86,10 @@ return declare("citrix.xenclient.Frame", [borderContainer, _templated, _citrixWi
         if (noFade) {
             this._setDisplay(this.waitNode, false);
         } else {
-            dojo.fadeOut({
+            fx.fadeOut({
                 node: this.waitNode,
                 duration: this.waitFadeDuration,
-                onEnd: dojo.hitch(this, function() {
+                onEnd: lang.hitch(this, function() {
                     this._setDisplay(this.waitNode, false);
                 })
             }).play();
@@ -125,15 +135,15 @@ return declare("citrix.xenclient.Frame", [borderContainer, _templated, _citrixWi
 
     _onMouseMove: function(e) {
         if (XUICache.Host.pointer_trail_timeout != 0) {
-            var pointer = dojo.clone(this.pointerNode);
-            dojo.removeAttr(pointer, "id");
-            dojo.place(pointer, document.body);
-            dojo.style(pointer, { top: e.pageY + 2 + "px", left: e.pageX + 2 + "px", display: "inline-block" });
-            dojo.fadeOut({
+            var pointer = lang.clone(this.pointerNode);
+            domAttr.remove(pointer, "id");
+            domConstruct.place(pointer, document.body);
+            style.set(pointer, { top: e.pageY + 2 + "px", left: e.pageX + 2 + "px", display: "inline-block" });
+            fx.fadeOut({
                 node: pointer,
                 duration: XUICache.Host.pointer_trail_timeout,
                 onEnd: function() {
-                    dojo.destroy(pointer);
+                    domConstruct.destroy(pointer);
                 }
             }).play();
         }
@@ -158,7 +168,7 @@ return declare("citrix.xenclient.Frame", [borderContainer, _templated, _citrixWi
     _setupChild: function(child){
         this.inherited(arguments);
         if (child.region == "center") {
-            this.wallpaperNode = dojo.create("img", { className: "wallpaper" }, child.domNode, "first");
+            this.wallpaperNode = domConstruct.create("img", { className: "wallpaper" }, child.domNode, "first");
         }
     },
 
@@ -169,7 +179,7 @@ return declare("citrix.xenclient.Frame", [borderContainer, _templated, _citrixWi
         if(this.badgeNodes.length == 0 && this.wallpaperNode && XUICache.Host.branding_badges.length > 0) {
             for(var badge in XUICache.Host.branding_badges) {
                 if(XUICache.Host.branding_badges.hasOwnProperty(badge) && badge != "length") {
-                    this.badgeNodes.push[dojo.create("img", { className: "badge {0}".format(badge.toLowerCase()), src: XUICache.Host.branding_badges[badge] }, this.wallpaperNode.parentNode, 1)];
+                    this.badgeNodes.push[domConstruct.create("img", { className: "badge {0}".format(badge.toLowerCase()), src: XUICache.Host.branding_badges[badge] }, this.wallpaperNode.parentNode, 1)];
                 }
             }
         }

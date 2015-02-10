@@ -1,6 +1,8 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/lang",
+    "dojo/topic",
     // Resources
     "dojo/i18n!citrix/xenclient/nls/ReportWizard",
     "dojo/text!citrix/xenclient/templates/ReportWizard.html",
@@ -15,7 +17,7 @@ define([
     "citrix/common/ProgressBar",
     "citrix/common/WizardNavigator"
 ],
-function(dojo, declare, reportWizardNls, template, _wizard) {
+function(dojo, declare, lang, topic, reportWizardNls, template, _wizard) {
 return declare("citrix.xenclient.ReportWizard", [_wizard], {
 
     templateString: template,
@@ -23,7 +25,7 @@ return declare("citrix.xenclient.ReportWizard", [_wizard], {
     wizardId: "ReportWizard",
 
     postMixInProperties: function() {
-        dojo.mixin(this, reportWizardNls);
+        lang.mixin(this, reportWizardNls);
 
         this.inherited(arguments);
     },
@@ -31,9 +33,9 @@ return declare("citrix.xenclient.ReportWizard", [_wizard], {
     postCreate: function() {
         this.inherited(arguments);
 
-        this.generationPage.onStartFunction = dojo.hitch(this, this._onGenerationPageStart);
-        this.generationPage.onNextFunction = dojo.hitch(this, this._onGenerationPageNext);
-        this.finishPage.onStartFunction = dojo.hitch(this, this._onFinishPageStart);
+        this.generationPage.onStartFunction = lang.hitch(this, this._onGenerationPageStart);
+        this.generationPage.onNextFunction = lang.hitch(this, this._onGenerationPageNext);
+        this.finishPage.onStartFunction = lang.hitch(this, this._onFinishPageStart);
     },
 
     startup: function() {
@@ -48,7 +50,9 @@ return declare("citrix.xenclient.ReportWizard", [_wizard], {
             }
         }
 
-        this.subscribe("com.citrix.xenclient.status_tool", statusToolProgress);
+        this.own(
+            topic.subscribe("com.citrix.xenclient.status_tool", lang.hitch(this, statusToolProgress))
+        );
     },
 
     onExecute: function() {
@@ -102,7 +106,7 @@ return declare("citrix.xenclient.ReportWizard", [_wizard], {
                 this.wizard.selectChild(this.finishPage);
             }
 
-            XUICache.Host.createStatusReport(screenshots, guest_info, summary, description, repro_steps, ticket, dojo.hitch(this, success), dojo.hitch(this, this._errors));
+            XUICache.Host.createStatusReport(screenshots, guest_info, summary, description, repro_steps, ticket, lang.hitch(this, success), lang.hitch(this, this._errors));
         }
 
         generate.call(this);

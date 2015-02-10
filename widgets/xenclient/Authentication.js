@@ -1,6 +1,9 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/lang",
+    "dojo/query",
+    "dojo/topic",
     // Resources
     "dojo/i18n!citrix/xenclient/nls/Authentication",
     "dojo/i18n!citrix/xenclient/nls/Alerts",
@@ -14,7 +17,7 @@ define([
     // Required in template
     "citrix/common/ValidationTextBox"
 ],
-function(dojo, declare, authNls, alertsNls, template, _widget, _templated, _contained, _cssStateMixin, _citrixWidgetMixin) {
+function(dojo, declare, lang, query, topic, authNls, alertsNls, template, _widget, _templated, _contained, _cssStateMixin, _citrixWidgetMixin) {
 return declare("citrix.xenclient.Authentication", [_widget, _templated, _contained, _cssStateMixin, _citrixWidgetMixin], {
 
     templateString: template,
@@ -23,7 +26,7 @@ return declare("citrix.xenclient.Authentication", [_widget, _templated, _contain
     errorTimeout: 15, // Seconds to keep the user waiting after 3 or more failed logins
 
     postMixInProperties: function() {
-        dojo.mixin(this, authNls);
+        lang.mixin(this, authNls);
         this.INTERNAL_ERROR = alertsNls.INTERNAL_ERROR;
         this.inherited(arguments);
     },
@@ -31,13 +34,15 @@ return declare("citrix.xenclient.Authentication", [_widget, _templated, _contain
     postCreate: function() {
         this.inherited(arguments);
         this._setup();
-        this.subscribe(XUtils.publishTopic, this._messageHandler);
-        this.subscribe("com.citrix.xenclient.input", this._messageHandler);
+        this.own(
+            topic.subscribe(XUtils.publishTopic, lang.hitch(this, this._messageHandler)),
+            topic.subscribe("com.citrix.xenclient.input", lang.hitch(this, this._messageHandler))
+        );
     },
 
     _setup: function() {
         // necessary to avoid full selecting text in field we tabbed into
-        dojo.query("input").onfocus(function(event) {
+        query("input").onfocus(function(event) {
             setTimeout(function() { event.target.value = event.target.value }, 1);
         });
 
@@ -47,7 +52,7 @@ return declare("citrix.xenclient.Authentication", [_widget, _templated, _contain
 
     _setContext: function() {
         // Get flags
-        XUICache.Host.authGetContext(dojo.hitch(this, function(stuff, cruft, flags) {
+        XUICache.Host.authGetContext(lang.hitch(this, function(stuff, cruft, flags) {
             xc_debug.log("Auth received flags: {0}", flags.toString());
             this._setDisplay(this.passwordContainer, true);
             if (flags) {
@@ -102,7 +107,7 @@ return declare("citrix.xenclient.Authentication", [_widget, _templated, _contain
             var flags = params[1];
             xc_debug.log("Auth received {0}", status);
             
-            var handleStatus = dojo.hitch(this, function() {
+            var handleStatus = lang.hitch(this, function() {
                 switch(status) {
                     case "need_credentials": {
                         if (flags & XenConstants.AuthFlags.REMOTE_PASSWORD_EXPIRED) {

@@ -1,12 +1,14 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/_base/lang",
+    "dojo/topic",
     // Resources
     "dojo/text!citrix/xenclient/templates/AlertPopup.html",
     // Mixins
     "citrix/common/AlertPopup"
 ],
-function(dojo, declare, template, alertPopup) {
+function(dojo, declare, lang, topic, template, alertPopup) {
 return declare("citrix.xenclient.AlertPopup", [alertPopup], {
 
     templateString: template,
@@ -30,7 +32,9 @@ return declare("citrix.xenclient.AlertPopup", [alertPopup], {
 
     postCreate: function() {
         this.inherited(arguments);
-        this.subscribe(XUtils.publishTopic, this._messageHandler);
+        this.own(
+            topic.subscribe(XUtils.publishTopic, lang.hitch(this, this._messageHandler))
+        );
     },
 
     showPopup: function(data) {

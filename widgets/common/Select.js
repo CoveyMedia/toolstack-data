@@ -1,13 +1,18 @@
 define([
     "dojo",
     "dojo/_base/declare",
+    "dojo/dom-class",
+    "dojo/_base/lang",
+    "dojo/_base/array",
+    "dojo/dom-attr",
+    "dojo/keys",
     // Mixins
     "dijit/form/Select",
     // Required in code
     "dijit/MenuSeparator",
     "dijit/MenuItem"
 ],
-function(dojo, declare, select, menuSeparator, menuItem) {
+function(dojo, declare, domClass, lang, array, attr, keys, select, menuSeparator, menuItem) {
 
 var _SelectMenu = declare("citrix.common._SelectMenu", [select._Menu], {
 
@@ -34,7 +39,7 @@ var Select = declare("citrix.common.Select", [select], {
             }
             // Create the dropDown widget
             this.dropDown = new _SelectMenu({id: this.id + "_menu", parentSelect: this});
-            dojo.addClass(this.dropDown.domNode, this.baseClass + "Menu");
+            domClass.add(this.dropDown.domNode, /*this.baseClass + */ "dijitSelectMenu");
         }
         this.inherited(arguments);
     },
@@ -50,7 +55,7 @@ var Select = declare("citrix.common.Select", [select], {
 			return new menuSeparator();
 		}else{
 			// Just a regular menu option
-			var click = dojo.hitch(this, "_setValueAttr", option);
+			var click = lang.hitch(this, "_setValueAttr", option);
 			var item = new menuItem({
 				option: option,
 				label: option.label || this.emptyLabel,
@@ -73,34 +78,34 @@ var Select = declare("citrix.common.Select", [select], {
 			return;
 		}
 		var opts = this.getOptions() || [];
-        if(!dojo.isArray(newValue)){
+        if(!(newValue instanceof Array)){
 			newValue = [newValue];
 		}
-		dojo.forEach(newValue, function(i, idx){
-			if(!dojo.isObject(i)){
-				newValue[idx] = dojo.filter(opts, function(node){
+		array.forEach(newValue, function(i, idx){
+			if(!lang.isObject(i)){
+				newValue[idx] = array.filter(opts, function(node){
 					return node.value === i;
 				})[0] || {value: "", label: ""};
 			}
 		}, this);
 
 		// Make sure some sane default is set
-//		newValue = dojo.filter(newValue, function(i){ return i && i.value; });
+        // newValue = dojo.filter(newValue, function(i){ return i && i.value; });
 		if(!this.multiple && !newValue[0] && opts.length){
 			newValue[0] = opts[0];
 		}
-		dojo.forEach(opts, function(i){
-			i.selected = dojo.some(newValue, function(v){ return v.value === i.value; });
+		array.forEach(opts, function(i){
+			i.selected = array.some(newValue, function(v){ return v.value === i.value; });
 		});
-		var val = dojo.map(newValue, function(i){ return i.value; }),
-			disp = dojo.map(newValue, function(i){ return i.label; });
+		var val = array.map(newValue, function(i){ return i.value; }),
+			disp = array.map(newValue, function(i){ return i.label; });
 
 		this._set("value", this.multiple ? val : val[0]);
 		this._setDisplay(this.multiple ? disp : disp[0]);
 
 		this._updateSelection();
 		this._handleOnChange(this.value, priorityChange);
-        dojo.attr(this.valueNode, "value", this.get("value"));
+        attr.set(this.valueNode, "value", this.get("value"));
 	},
 
     _updateSelection: function() {
@@ -108,16 +113,16 @@ var Select = declare("citrix.common.Select", [select], {
 		//		Sets the "selected" class on the item for styling purposes
 		this._set("value", this._getValueFromOpts());
 		var val = this.value;
-		if(!dojo.isArray(val)){
+		if(!(val instanceof Array)){
 			val = [val];
 		}
 //		if(val && val[0]){
         var selectedChild = null;
-        dojo.forEach(this._getChildren(), function(child){
-            var isSelected = dojo.some(val, function(v){
+        array.forEach(this._getChildren(), function(child){
+            var isSelected = array.some(val, function(v){
                 return child.option && (v === child.option.value);
             });
-            dojo.toggleClass(child.domNode, this.baseClass + "SelectedOption", isSelected);
+            domClass.toggle(child.domNode, /*this.baseClass + */"dijitSelectSelectedOption", isSelected);
             child.domNode.setAttribute("aria-selected", isSelected);
             if(isSelected) { // XC-9487 saves the selected widget so that the dropdown menu can highlight it when it opens
                 selectedChild = child;
@@ -134,7 +139,7 @@ var Select = declare("citrix.common.Select", [select], {
 		var opts = this.getOptions() || [];
 		if(!this.multiple && opts.length){
 			// Mirror what a select does - choose the first one
-			var opt = dojo.filter(opts, function(i){
+			var opt = array.filter(opts, function(i){
 				return i.selected;
 			})[0];
 			if(opt){
@@ -146,7 +151,7 @@ var Select = declare("citrix.common.Select", [select], {
 			}
 		}else if(this.multiple){
 			// Set value to be the sum of all selected
-			return dojo.map(dojo.filter(opts, function(i){
+			return array.map(array.filter(opts, function(i){
 				return i.selected;
 			}), function(i){
 				return i.value;
@@ -156,7 +161,7 @@ var Select = declare("citrix.common.Select", [select], {
 	},
 
     _onKey: function(/*Event*/ e){
-        if(e.charOrCode == dojo.keys.ENTER) {
+        if(e.charOrCode == keys.ENTER) {
             return;
         }
         else {

@@ -1,24 +1,24 @@
 <div class="citrixDialog" tabindex="-1" waiRole="dialog" waiState="labelledby-${id}_title">
   	<div class="citrixDialogTitleBar">
-        <span dojoAttachPoint="titleNode" class="citrixDialogTitle" id="${id}_title">${CREATE_STATUS_REPORT}</span>
-        <span dojoAttachPoint="closeButtonNode" class="citrixDialogCloseIcon" dojoAttachEvent="onclick: onCancel">
-            <span dojoAttachPoint="closeText"></span>
+        <span data-dojo-attach-point="titleNode" class="citrixDialogTitle" id="${id}_title">${CREATE_STATUS_REPORT}</span>
+        <span data-dojo-attach-point="closeButtonNode" class="citrixDialogCloseIcon" data-dojo-attach-event="onclick: onCancel">
+            <span data-dojo-attach-point="closeText"></span>
         </span>
     </div>
     <div class="citrixDialogPaneContent">
-        <div id="${wizardId}" dojoType="citrix.common.WizardContainer" dojoAttachPoint="wizard">
-            <div class="smallText" dojoType="citrix.common.WizardPage" title="${REPORT_WELCOME}" selected="true">
+        <div id="${wizardId}" data-dojo-type="citrix.common.WizardContainer" data-dojo-attach-point="wizard">
+            <div class="smallText" data-dojo-type="citrix.common.WizardPage" title="${REPORT_WELCOME}" selected="true">
                 <fieldset class="citrixTabPaneColumn single">
                     <p>${REPORT_DESCRIPTION}</p>
                     <p>${REPORT_VM_DESCRIPTION}</p>
                     <div class="citrixTabPaneField radio">
                         <label>&nbsp;</label>
-                        <input id="includeVMScreens" dojoType="citrix.common.CheckBox" name="includeVMScreens" type="checkbox" title="${REPORT_INCLUDE_VMSCREENS}" checked="checked"/>
+                        <input id="includeVMScreens" data-dojo-type="citrix.common.CheckBox" name="includeVMScreens" type="checkbox" title="${REPORT_INCLUDE_VMSCREENS}" checked="checked"/>
                         <label class="inline" for="includeVMScreens">${REPORT_INCLUDE_VMSCREENS}</label>
                     </div>
                     <div class="citrixTabPaneField radio">
                         <label>&nbsp;</label>
-                        <input id="includeVMs" dojoType="citrix.common.CheckBox" name="includeVMs" type="checkbox" title="${REPORT_INCLUDE_VMS}" checked="checked" />
+                        <input id="includeVMs" data-dojo-type="citrix.common.CheckBox" name="includeVMs" type="checkbox" title="${REPORT_INCLUDE_VMS}" checked="checked" />
                         <label class="inline" for="includeVMs">${REPORT_INCLUDE_VMS}</label>
                     </div>
                 </fieldset>
@@ -29,7 +29,7 @@
                     </div>
                 </div>
             </div>
-            <div dojoType="citrix.common.WizardPage" title="${REPORT_SUMMARY}">
+            <div data-dojo-type="citrix.common.WizardPage" title="${REPORT_SUMMARY}">
                 <fieldset class="citrixTabPaneColumn single">
                     <div class="citrixTabPaneField">
                         <label>&nbsp;</label>
@@ -37,11 +37,11 @@
                     </div>
                     <div class="citrixTabPaneField">
                         <label for="summary">${SUMMARY_LABEL}</label>
-                        <input class="citrix" id="summary" class="citrix" dojoType="citrix.common.ValidationTextBox" name="summary" maxLength="60" required="true" regExpObject="XenConstants.Regex.VM_NAME" invalidMessage="${SUMMARY_VALERROR}" />
+                        <input class="citrix" id="summary" class="citrix" data-dojo-type="citrix.common.ValidationTextBox" name="summary" maxLength="60" required="true" regExpObject="XenConstants.Regex.VM_NAME" invalidMessage="${SUMMARY_VALERROR}" />
                     </div>
                     <div class="citrixTabPaneField">
                         <label for="description">${DESCRIPTION_LABEL}</label>
-                        <textarea class="citrix" id="description" name="description" dojoType="citrix.common.ValidationTextarea"></textarea>
+                        <textarea class="citrix" id="description" name="description" data-dojo-type="citrix.common.ValidationTextarea"></textarea>
                     </div>
                 </fieldset>
                 <div class="alignBottom">
@@ -51,7 +51,7 @@
                     </div>
                 </div>
             </div>
-            <div dojoType="citrix.common.WizardPage" title="${REPORT_STEPS}">
+            <div data-dojo-type="citrix.common.WizardPage" title="${REPORT_STEPS}">
                 <fieldset class="citrixTabPaneColumn single">
                     <div class="citrixTabPaneField">
                         <label>&nbsp;</label>
@@ -59,7 +59,7 @@
                     </div>
                     <div class="citrixTabPaneField">
                         <label for="steps">${REPORT_REPRO_LABEL}</label>
-                        <textarea class="citrix" id="steps" name="steps" dojoType="citrix.common.ValidationTextarea"></textarea>
+                        <textarea class="citrix" id="steps" name="steps" data-dojo-type="citrix.common.ValidationTextarea"></textarea>
                     </div>
                     <div class="citrixTabPaneField">
                         <label>&nbsp;</label>
@@ -67,31 +67,31 @@
                     </div>
                     <div class="citrixTabPaneField">
                         <label for="number">${REPORT_TICKET_LABEL}</label>
-                        <input dojoAttachPoint="numberNode" class="citrix" id="number" type="text" name="number" dojoType="citrix.common.ValidationTextBox" />
+                        <input data-dojo-attach-point="numberNode" class="citrix" id="number" type="text" name="number" data-dojo-type="citrix.common.ValidationTextBox" />
                     </div>
                 </fieldset>
             </div>
-            <div dojoType="citrix.common.WizardPage" title="${REPORT_GENERATION}" dojoAttachPoint="generationPage">
+            <div data-dojo-type="citrix.common.WizardPage" title="${REPORT_GENERATION}" data-dojo-attach-point="generationPage">
                 <fieldset class="citrixTabPaneColumn single">
                     <p>${REPORT_FINISHED}</p>
                     <div>&nbsp;</div>
-                    <div class="citrixTabPaneField progressBar" dojoAttachPoint="generatingReport">
+                    <div class="citrixTabPaneField progressBar" data-dojo-attach-point="generatingReport">
                         <label>${GENERATING_REPORT}</label>
-                        <div dojoType="citrix.common.ProgressBar" dojoAttachPoint="progressNode"></div>
+                        <div data-dojo-type="citrix.common.ProgressBar" data-dojo-attach-point="progressNode"></div>
                     </div>
                 </fieldset>
             </div>
-            <div dojoType="citrix.common.WizardPage" title="${REPORT_FINISH}" dojoAttachPoint="finishPage">
+            <div data-dojo-type="citrix.common.WizardPage" title="${REPORT_FINISH}" data-dojo-attach-point="finishPage">
                 <fieldset class="citrixTabPaneColumn single">
-                    <p dojoAttachPoint="reportName">${REPORT_CREATED}</p>
-                    <p dojoAttachPoint="reportFinish">${REPORT_FINISH_SERVER}</p>
-                    <p dojoAttachPoint="serveReport"></p>
-                    <p dojoAttachPoint="stopServer">${STOP_SERVER}</p>
+                    <p data-dojo-attach-point="reportName">${REPORT_CREATED}</p>
+                    <p data-dojo-attach-point="reportFinish">${REPORT_FINISH_SERVER}</p>
+                    <p data-dojo-attach-point="serveReport"></p>
+                    <p data-dojo-attach-point="stopServer">${STOP_SERVER}</p>
                 </fieldset>
             </div>
         </div>
     </div>
-    <div dojoAttachPoint="footerNode" class="citrixDialogFooterContent">
-        <span class="citrixDialogFooter right" wizardId="${wizardId}" dojoType="citrix.common.WizardNavigator" dojoAttachPoint="navigationNode"></span>
+    <div data-dojo-attach-point="footerNode" class="citrixDialogFooterContent">
+        <span class="citrixDialogFooter right" wizardId="${wizardId}" data-dojo-type="citrix.common.WizardNavigator" data-dojo-attach-point="navigationNode"></span>
     </div>
 </div>
