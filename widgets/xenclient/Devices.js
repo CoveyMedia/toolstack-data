@@ -199,30 +199,18 @@ return declare("citrix.xenclient.Devices", [dialog, _boundContainerMixin, _citri
     },
 
     _setControls: function(deviceID, prefix) {
-        var name = registry.byId(prefix + "_name_" + deviceID);
         var check = registry.byId(prefix + "_check_" + deviceID);
         var select = registry.byId(prefix + "_select_" + deviceID);
 
         if (check && select) {
-            if (prefix != "usb" || this.host.policy_modify_usb_settings){
-                if (select.value == "") {
-                    this._setEnabled(check, false);
-                    check.set("checked", false);
-                } else {
-                    this._setEnabled(check, true);
-                    this._setEnabled(select, !check.checked);
-                }
-            } else {
+            if (select.value == "") {
                 this._setEnabled(check, false);
-                this._setEnabled(select, false);
-            }
-        } 
-        if (name) {
-            if (prefix == "usb" && !this.host.policy_modify_usb_settings){
-                this._setEnabled(name, false);
+                check.set("checked", false);
+            } else {
+                this._setEnabled(check, true);
+                this._setEnabled(select, !check.checked);
             }
         }
-         
     },
 
     _messageHandler: function(message) {

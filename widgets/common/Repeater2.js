@@ -112,7 +112,7 @@ return declare("citrix.common.Repeater2", [_widget, _boundContainerMixin, _edita
     },
 
     _clearItems: function() {
-        array.forEach(this.getChildren(), function(widget) {
+        array.forEach(this.getDecendantWidgets(), function(widget) {
             widget.destroyRecursive();
         });
         array.forEach(this._connectHandles, function(handle) {
@@ -132,6 +132,10 @@ return declare("citrix.common.Repeater2", [_widget, _boundContainerMixin, _edita
             array.forEach(this.value, function(item) {
                 this._addItem(this.templateHtml, item);
             }, this);
+            
+            this.bind(this.value, this.containerNode, true, this.bindAttr);
+             
+             
         }
 
         array.forEach(this.getChildren(), function(widget) {
@@ -173,7 +177,7 @@ return declare("citrix.common.Repeater2", [_widget, _boundContainerMixin, _edita
             this._attachTemplateNodes(widgets);
             this._setupOptions(widgets);
         }
-        this.bind(item, node, true, this.bindAttr);
+        //this.bind(item, node, true, this.bindAttr);
         this.containerNode.appendChild(node);
     },
 

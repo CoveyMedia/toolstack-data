@@ -12,7 +12,7 @@ define([
     "dojo/text!citrix/xenclient/templates/Settings.html",
     // Mixins
     "citrix/common/Dialog",
-    "citrix/common/_BoundContainerMixin",
+    "citrix/common/_BoundContainerMixin2",
     "citrix/common/_CitrixTooltipMixin",
     // Required in code
     "citrix/common/ItemFileReadStore",
@@ -353,8 +353,9 @@ return declare("citrix.xenclient.Settings", [dialog, _boundContainerMixin, _citr
                     }
                 }
             }, this);
-
+            this.addChildWidgetArray(this.audioWidgets);
             // Setup the Save button activation on these fields
+            //this._setupSave(this.audioWidgets);
             this._setupSave(this.audioWidgets);
         };
 

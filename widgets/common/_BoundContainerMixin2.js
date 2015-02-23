@@ -70,9 +70,11 @@ return declare("citrix.common._BoundContainerMixin2", null, {
                 continue;
             }
             array.forEach(widgets, function(widget) {
-                var value = (widget.multiple && !(values instanceof Array)) ? [values] : values;
-                widget.set('value', value);
-                widget.set("lastBoundValue", value);
+                if (widget.containerNode || widget.srcNodeRef || widget.domNode){
+                    var value = (widget.multiple && !(values instanceof Array)) ? [values] : values;
+                    widget.set('value', value);
+                    widget.set("lastBoundValue", value);
+                }
             });
         }
         this._binding = false;
@@ -214,7 +216,7 @@ return declare("citrix.common._BoundContainerMixin2", null, {
                 };
                 onChange.call(context, value);
             };
-            array.forEach(widgets || this.getDescendants(), function(widget) {
+            array.forEach(widgets || this.getDecendantWidgets(), function(widget) {
                 if(widget.name) {
                     if(widget._handleOnChange) {
                         // context needs to be null/not specified so it carries through whatever context the function already has
@@ -266,13 +268,17 @@ return declare("citrix.common._BoundContainerMixin2", null, {
         this._childWidgets.push(widget);
     },
     
+    addChildWidgetArray: function(widgetArray){
+        array.forEach(widgetArray, lang.hitch(this, this.addChildWidget));
+    },
+    
     // recursively get decenant widget
     // returns an array of widgets
     getDecendantWidgets: function(){
       var ret = [];
       array.forEach(this._childWidgets, function(widget){
         ret.push(widget);
-        if(widget.hasOwnProperty("_childWidgets")){
+        if(widget.hasOwnProperty("_childWidgets") && widget._childWidgets.length){
             ret = ret.concat(widget.getDecendantWidgets());
         }
       });
@@ -295,7 +301,7 @@ return declare("citrix.common._BoundContainerMixin2", null, {
         
         return ret;
     },
-    
+
     uninitialize: function() {
         array.forEach(this._handles, function(handle){handle.remove()});
     }
